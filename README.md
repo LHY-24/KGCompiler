@@ -1,6 +1,8 @@
 # KG-Compilation 
 
 ## Research Document
+### Paper Note
+[SMORE](https://www.notion.so/SMORE-ac537c73d1aa4f34927f30ec8f74625a?pvs=4)
 
 ## Related Work
 
