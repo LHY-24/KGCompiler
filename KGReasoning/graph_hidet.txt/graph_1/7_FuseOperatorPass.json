@@ -1,0 +1,701 @@
+{
+  "graphs": [
+    {
+      "name": "",
+      "inputs": [
+        {
+          "name": "input:0",
+          "arguments": [
+            {
+              "name": "input:0",
+              "type": {
+                "string": "int64['1', '2']",
+                "shape": {
+                  "dimensions": [
+                    "1",
+                    "2"
+                  ]
+                },
+                "dataType": "int64"
+              }
+            }
+          ],
+          "visible": true
+        },
+        {
+          "name": "input:1",
+          "arguments": [
+            {
+              "name": "input:1",
+              "type": {
+                "string": "int64['1', '14505']",
+                "shape": {
+                  "dimensions": [
+                    "1",
+                    "14505"
+                  ]
+                },
+                "dataType": "int64"
+              }
+            }
+          ],
+          "visible": true
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output:0",
+          "arguments": [
+            {
+              "name": "4_Concat:0",
+              "type": {
+                "string": "float32['1', '14505', '400']",
+                "shape": {
+                  "dimensions": [
+                    "1",
+                    "14505",
+                    "400"
+                  ]
+                },
+                "dataType": "float32"
+              }
+            }
+          ],
+          "visible": true
+        }
+      ],
+      "nodes": [
+        {
+          "name": "0_FusedAbs",
+          "type": {
+            "name": "FusedAbs",
+            "category": "dropout"
+          },
+          "inputs": [
+            {
+              "name": "0",
+              "arguments": [
+                {
+                  "name": "const:0",
+                  "type": {
+                    "string": "float32['14505', '400']",
+                    "shape": {
+                      "dimensions": [
+                        "14505",
+                        "400"
+                      ]
+                    },
+                    "dataType": "float32"
+                  },
+                  "initializer": {
+                    "kind": "Initializer",
+                    "value": "<>"
+                  }
+                }
+              ],
+              "visible": true
+            },
+            {
+              "name": "1",
+              "arguments": [
+                {
+                  "name": "const:1",
+                  "type": {
+                    "string": "float32['474', '400']",
+                    "shape": {
+                      "dimensions": [
+                        "474",
+                        "400"
+                      ]
+                    },
+                    "dataType": "float32"
+                  },
+                  "initializer": {
+                    "kind": "Initializer",
+                    "value": "<>"
+                  }
+                }
+              ],
+              "visible": true
+            },
+            {
+              "name": "2",
+              "arguments": [
+                {
+                  "name": "input:1",
+                  "type": {
+                    "string": "int64['1', '14505']",
+                    "shape": {
+                      "dimensions": [
+                        "1",
+                        "14505"
+                      ]
+                    },
+                    "dataType": "int64"
+                  }
+                }
+              ],
+              "visible": true
+            },
+            {
+              "name": "3",
+              "arguments": [
+                {
+                  "name": "input:0",
+                  "type": {
+                    "string": "int64['1', '2']",
+                    "shape": {
+                      "dimensions": [
+                        "1",
+                        "2"
+                      ]
+                    },
+                    "dataType": "int64"
+                  }
+                }
+              ],
+              "visible": true
+            }
+          ],
+          "outputs": [
+            {
+              "name": "0",
+              "arguments": [
+                {
+                  "name": "0_FusedAbs:0",
+                  "type": {
+                    "string": "float32['1', '14505', '400']",
+                    "shape": {
+                      "dimensions": [
+                        "1",
+                        "14505",
+                        "400"
+                      ]
+                    },
+                    "dataType": "float32"
+                  }
+                }
+              ],
+              "visible": true
+            }
+          ],
+          "attributes": [
+            {
+              "name": "fused_graph",
+              "type": "FlowGraph",
+              "value": "Graph(x: float32[14505, 400][cuda], x_1: float32[474, 400][cuda], x_2: int64[1, 14505][cuda], x_3: int64[1, 2][cuda]){\n  x_4: int64[1, 14505][cuda] = StridedSlice(x_2, starts=[0, 0], ends=[1, 14505], axes=[0, 1], strides=[1, 1])  \n  x_5: int64[14505][cuda] = Squeeze(x_4, dims=[0])  \n  x_6: int64[14505][cuda] = Reshape(x_5, shape=[-1])  \n  x_7: float32[14505, 400][cuda] = Take(x, x_6, axis=0)  \n  x_8: float32[1, 14505, 400][cuda] = Reshape(x_7, shape=[1, 14505, -1])  \n  x_9: int64[1, 1][cuda] = StridedSlice(x_3, starts=[0, 0], ends=[1, 1], axes=[0, 1], strides=[1, 1])  \n  x_10: int64[1][cuda] = Squeeze(x_9, dims=[1])  \n  x_11: float32[1, 400][cuda] = Take(x, x_10, axis=0)  \n  x_12: int64[1, 1][cuda] = StridedSlice(x_3, starts=[0, 1], ends=[1, 2], axes=[0, 1], strides=[1, 1])  \n  x_13: int64[1][cuda] = Squeeze(x_12, dims=[1])  \n  x_14: float32[1, 400][cuda] = Take(x_1, x_13, axis=0)  \n  x_15: float32[1, 400][cuda] = Add(x_11, x_14)  \n  x_16: float32[1, 400][cuda] = Concat(x_15, axis=0)  \n  x_17: float32[1, 1, 400][cuda] = Unsqueeze(x_16, dims=[1])  \n  x_18: float32[1, 14505, 400][cuda] = Subtract(x_8, x_17)  \n  x_19: float32[1, 14505, 400][cuda] = Abs(x_18)  \n  return x_19\n}",
+              "visible": true,
+              "description": ""
+            },
+            {
+              "name": "anchor",
+              "type": "int",
+              "value": "15",
+              "visible": true,
+              "description": ""
+            }
+          ],
+          "description": [
+            "Task(",
+            "  name: fused",
+            "  parameters: ",
+            "    data: tensor(float32, [14505, 400])",
+            "    data_1: tensor(float32, [474, 400])",
+            "    data_2: tensor(int64, [1, 14505])",
+            "    data_3: tensor(int64, [1, 2])",
+            "    y: tensor(float32, [1, 14505, 400])",
+            "  inputs: [data, data_1, data_2, data_3]",
+            "  outputs: [y]",
+            "  computations: ",
+            "    out: int64[1, 1] where out[v, v_1] = data_3[v, (v_1 + 1)]",
+            "    y_1: int64[1] where y_1[v_2] = out[0, 0]",
+            "    output: float32[1, 400] where output[v_3, v_4] = data_1[((y_1[v_3] < 0) ? (y_1[v_3] + 474) : y_1[v_3]), v_4]",
+            "    out_1: int64[1, 1] where out_1[v_5, v_6] = data_3[v_5, v_6]",
+            "    y_2: int64[1] where y_2[v_7] = out_1[0, 0]",
+            "    out_2: int64[1, 14505] where out_2[v_8, v_9] = data_2[v_8, v_9]",
+            "    y_3: int64[14505] where y_3[v_10] = out_2[0, (v_10 % 14505)]",
+            "    y_4: int64[14505] where y_4[v_11] = y_3[v_11]",
+            "    output_1: float32[1, 400] where output_1[v_12, v_13] = data[((y_2[v_12] < 0) ? (y_2[v_12] + 14505) : y_2[v_12]), v_13]",
+            "    z: float32[1, 400] where z[v_14, v_15] = (output_1[0, v_15] + output[0, v_15])",
+            "    out_3: float32[1, 400] where out_3[v_16, v_17] = z[v_16, v_17]",
+            "    y_5: float32[1, 1, 400] where y_5[v_18, v_19, v_20] = out_3[0, (v_20 % 400)]",
+            "    output_2: float32[14505, 400] where output_2[v_21, v_22] = data[((y_4[v_21] < 0) ? (y_4[v_21] + 14505) : y_4[v_21]), v_22]",
+            "    y_6: float32[1, 14505, 400] where y_6[v_23, v_24, v_25] = output_2[(((v_25 + (v_24 * 400)) + (v_23 * 5802000)) / 400), (((v_25 + (v_24 * 400)) + (v_23 * 5802000)) % 400)]",
+            "    z_1: float32[1, 14505, 400] where z_1[v_26, v_27, v_28] = (y_6[0, v_27, v_28] - y_5[0, 0, v_28])",
+            "    y: float32[1, 14505, 400] where y[v_29, v_30, v_31] = ((0.0f <= z_1[v_29, v_30, v_31]) ? z_1[v_29, v_30, v_31] : (-z_1[v_29, v_30, v_31]))",
+            "  attributes: {fused_ops: slice rearrange reshape take reshape slice rearrange take slice rearrange take add concat rearrange subtract abs, anchor: abs}",
+            ")"
+          ]
+        },
+        {
+          "name": "1_FusedUnsqueeze",
+          "type": {
+            "name": "FusedUnsqueeze",
+            "category": "dropout"
+          },
+          "inputs": [
+            {
+              "name": "0",
+              "arguments": [
+                {
+                  "name": "const:2",
+                  "type": {
+                    "string": "float32['1', '400']",
+                    "shape": {
+                      "dimensions": [
+                        "1",
+                        "400"
+                      ]
+                    },
+                    "dataType": "float32"
+                  },
+                  "initializer": {
+                    "kind": "Initializer",
+                    "value": "<>"
+                  }
+                }
+              ],
+              "visible": true
+            },
+            {
+              "name": "1",
+              "arguments": [
+                {
+                  "name": "const:3",
+                  "type": {
+                    "string": "float32['474', '400']",
+                    "shape": {
+                      "dimensions": [
+                        "474",
+                        "400"
+                      ]
+                    },
+                    "dataType": "float32"
+                  },
+                  "initializer": {
+                    "kind": "Initializer",
+                    "value": "<>"
+                  }
+                }
+              ],
+              "visible": true
+            },
+            {
+              "name": "2",
+              "arguments": [
+                {
+                  "name": "input:0",
+                  "type": {
+                    "string": "int64['1', '2']",
+                    "shape": {
+                      "dimensions": [
+                        "1",
+                        "2"
+                      ]
+                    },
+                    "dataType": "int64"
+                  }
+                }
+              ],
+              "visible": true
+            }
+          ],
+          "outputs": [
+            {
+              "name": "0",
+              "arguments": [
+                {
+                  "name": "1_FusedUnsqueeze:0",
+                  "type": {
+                    "string": "float32['1', '1', '400']",
+                    "shape": {
+                      "dimensions": [
+                        "1",
+                        "1",
+                        "400"
+                      ]
+                    },
+                    "dataType": "float32"
+                  }
+                }
+              ],
+              "visible": true
+            }
+          ],
+          "attributes": [
+            {
+              "name": "fused_graph",
+              "type": "FlowGraph",
+              "value": "Graph(x: float32[1, 400][cuda], x_1: float32[474, 400][cuda], x_2: int64[1, 2][cuda]){\n  x_3: int64[1, 1][cuda] = StridedSlice(x_2, starts=[0, 1], ends=[1, 2], axes=[0, 1], strides=[1, 1])  \n  x_4: int64[1][cuda] = Squeeze(x_3, dims=[1])  \n  x_5: float32[1, 400][cuda] = Take(x_1, x_4, axis=0)  \n  x_6: float32[1, 400][cuda] = Add(x_5, x)  \n  x_7: float32[1, 400][cuda] = Concat(x_6, axis=0)  \n  x_8: float32[1, 1, 400][cuda] = Unsqueeze(x_7, dims=[1])  \n  return x_8\n}",
+              "visible": true,
+              "description": ""
+            },
+            {
+              "name": "anchor",
+              "type": "int",
+              "value": "5",
+              "visible": true,
+              "description": ""
+            }
+          ],
+          "description": [
+            "Task(",
+            "  name: fused",
+            "  parameters: ",
+            "    y: tensor(float32, [1, 400])",
+            "    data: tensor(float32, [474, 400])",
+            "    data_1: tensor(int64, [1, 2])",
+            "    y_1: tensor(float32, [1, 1, 400])",
+            "  inputs: [y, data, data_1]",
+            "  outputs: [y_1]",
+            "  computations: ",
+            "    out: int64[1, 1] where out[v, v_1] = data_1[v, (v_1 + 1)]",
+            "    y_2: int64[1] where y_2[v_2] = out[0, 0]",
+            "    output: float32[1, 400] where output[v_3, v_4] = data[((y_2[v_3] < 0) ? (y_2[v_3] + 474) : y_2[v_3]), v_4]",
+            "    z: float32[1, 400] where z[v_5, v_6] = (output[0, v_6] + y[0, v_6])",
+            "    out_1: float32[1, 400] where out_1[v_7, v_8] = z[v_7, v_8]",
+            "    y_1: float32[1, 1, 400] where y_1[v_9, v_10, v_11] = out_1[0, (v_11 % 400)]",
+            "  attributes: {fused_ops: slice rearrange take add concat rearrange, anchor: rearrange}",
+            ")"
+          ]
+        },
+        {
+          "name": "2_FusedLpNorm",
+          "type": {
+            "name": "FusedLpNorm",
+            "category": "dropout"
+          },
+          "inputs": [
+            {
+              "name": "0",
+              "arguments": [
+                {
+                  "name": "0_FusedAbs:0",
+                  "type": {
+                    "string": "float32['1', '14505', '400']",
+                    "shape": {
+                      "dimensions": [
+                        "1",
+                        "14505",
+                        "400"
+                      ]
+                    },
+                    "dataType": "float32"
+                  }
+                }
+              ],
+              "visible": true
+            },
+            {
+              "name": "1",
+              "arguments": [
+                {
+                  "name": "1_FusedUnsqueeze:0",
+                  "type": {
+                    "string": "float32['1', '1', '400']",
+                    "shape": {
+                      "dimensions": [
+                        "1",
+                        "1",
+                        "400"
+                      ]
+                    },
+                    "dataType": "float32"
+                  }
+                }
+              ],
+              "visible": true
+            }
+          ],
+          "outputs": [
+            {
+              "name": "0",
+              "arguments": [
+                {
+                  "name": "2_FusedLpNorm:0",
+                  "type": {
+                    "string": "float32['1', '14505', '400']",
+                    "shape": {
+                      "dimensions": [
+                        "1",
+                        "14505",
+                        "400"
+                      ]
+                    },
+                    "dataType": "float32"
+                  }
+                }
+              ],
+              "visible": true
+            }
+          ],
+          "attributes": [
+            {
+              "name": "fused_graph",
+              "type": "FlowGraph",
+              "value": "Graph(x: float32[1, 14505, 400][cuda], x_1: float32[1, 1, 400][cuda]){\n  x_2: float32[1, 14505, 400][cuda] = Min(x, x_1)  \n  x_3: float32[1, 14505, 400][cuda] = LpNorm(x_2, p=1, dim=2, eps=1e-12)  \n  x_4: float32[1, 14505, 400][cuda] = MultiplyScalar(x_3, scalar=0.02f)  \n  return x_4\n}",
+              "visible": true,
+              "description": ""
+            },
+            {
+              "name": "anchor",
+              "type": "int",
+              "value": "1",
+              "visible": true,
+              "description": ""
+            }
+          ],
+          "description": [
+            "Task(",
+            "  name: fused",
+            "  parameters: ",
+            "    x0: tensor(float32, [1, 14505, 400])",
+            "    x1: tensor(float32, [1, 1, 400])",
+            "    y: tensor(float32, [1, 14505, 400])",
+            "  inputs: [x0, x1]",
+            "  outputs: [y]",
+            "  computations: ",
+            "    out: float32[1, 14505, 400] where out[v, v_1, v_2] = generic_min(x0[0, v_1, v_2], x1[0, 0, v_2])",
+            "    sum: float32[1, 14505] where sum[v_3, v_4] = reduce([400], (v_5) => generic_pow(cast(float32, generic_abs(out[v_3, v_4, v_5])), 2), sum)",
+            "    p_norm: float32[1, 14505] where p_norm[v_6, v_7] = generic_pow(sum[v_6, v_7], 1.0f)",
+            "    y_1: float32[1, 14505, 400] where y_1[v_8, v_9, v_10] = cast(float32, (out[v_8, v_9, v_10] / generic_max(p_norm[v_8, v_9], 1e-12f)))",
+            "    y: float32[1, 14505, 400] where y[v_11, v_12, v_13] = (y_1[v_11, v_12, v_13] * 0.02f)",
+            "  attributes: {fused_ops: min lp_norm muls, anchor: lp_norm}",
+            ")"
+          ]
+        },
+        {
+          "name": "3_FusedLpNorm",
+          "type": {
+            "name": "FusedLpNorm",
+            "category": "dropout"
+          },
+          "inputs": [
+            {
+              "name": "0",
+              "arguments": [
+                {
+                  "name": "const:4",
+                  "type": {
+                    "string": "float32['1']",
+                    "shape": {
+                      "dimensions": [
+                        "1"
+                      ]
+                    },
+                    "dataType": "float32"
+                  },
+                  "initializer": {
+                    "kind": "Initializer",
+                    "value": "<>"
+                  }
+                }
+              ],
+              "visible": true
+            },
+            {
+              "name": "1",
+              "arguments": [
+                {
+                  "name": "2_FusedLpNorm:0",
+                  "type": {
+                    "string": "float32['1', '14505', '400']",
+                    "shape": {
+                      "dimensions": [
+                        "1",
+                        "14505",
+                        "400"
+                      ]
+                    },
+                    "dataType": "float32"
+                  }
+                }
+              ],
+              "visible": true
+            },
+            {
+              "name": "2",
+              "arguments": [
+                {
+                  "name": "0_FusedAbs:0",
+                  "type": {
+                    "string": "float32['1', '14505', '400']",
+                    "shape": {
+                      "dimensions": [
+                        "1",
+                        "14505",
+                        "400"
+                      ]
+                    },
+                    "dataType": "float32"
+                  }
+                }
+              ],
+              "visible": true
+            },
+            {
+              "name": "3",
+              "arguments": [
+                {
+                  "name": "1_FusedUnsqueeze:0",
+                  "type": {
+                    "string": "float32['1', '1', '400']",
+                    "shape": {
+                      "dimensions": [
+                        "1",
+                        "1",
+                        "400"
+                      ]
+                    },
+                    "dataType": "float32"
+                  }
+                }
+              ],
+              "visible": true
+            }
+          ],
+          "outputs": [
+            {
+              "name": "0",
+              "arguments": [
+                {
+                  "name": "3_FusedLpNorm:0",
+                  "type": {
+                    "string": "float32['1', '14505', '400']",
+                    "shape": {
+                      "dimensions": [
+                        "1",
+                        "14505",
+                        "400"
+                      ]
+                    },
+                    "dataType": "float32"
+                  }
+                }
+              ],
+              "visible": true
+            }
+          ],
+          "attributes": [
+            {
+              "name": "fused_graph",
+              "type": "FlowGraph",
+              "value": "Graph(x: float32[1][cuda], x_1: float32[1, 14505, 400][cuda], x_2: float32[1, 14505, 400][cuda], x_3: float32[1, 1, 400][cuda]){\n  x_4: float32[1, 14505, 400][cuda] = Subtract(x_2, x_3)  \n  x_5: float32[1, 14505, 400][cuda] = Relu(x_4)  \n  x_6: float32[1, 14505, 400][cuda] = LpNorm(x_5, p=1, dim=2, eps=1e-12)  \n  x_7: float32[1, 14505, 400][cuda] = Subtract(x, x_6)  \n  x_8: float32[1, 14505, 400][cuda] = Subtract(x_7, x_1)  \n  return x_8\n}",
+              "visible": true,
+              "description": ""
+            },
+            {
+              "name": "anchor",
+              "type": "int",
+              "value": "2",
+              "visible": true,
+              "description": ""
+            }
+          ],
+          "description": [
+            "Task(",
+            "  name: fused",
+            "  parameters: ",
+            "    x: tensor(float32, [1])",
+            "    y: tensor(float32, [1, 14505, 400])",
+            "    x_1: tensor(float32, [1, 14505, 400])",
+            "    y_1: tensor(float32, [1, 1, 400])",
+            "    z: tensor(float32, [1, 14505, 400])",
+            "  inputs: [x, y, x_1, y_1]",
+            "  outputs: [z]",
+            "  computations: ",
+            "    z_1: float32[1, 14505, 400] where z_1[v, v_1, v_2] = (x_1[0, v_1, v_2] - y_1[0, 0, v_2])",
+            "    y_2: float32[1, 14505, 400] where y_2[v_3, v_4, v_5] = generic_max(z_1[v_3, v_4, v_5], 0.0f)",
+            "    sum: float32[1, 14505] where sum[v_6, v_7] = reduce([400], (v_8) => generic_pow(cast(float32, generic_abs(y_2[v_6, v_7, v_8])), 2), sum)",
+            "    p_norm: float32[1, 14505] where p_norm[v_9, v_10] = generic_pow(sum[v_9, v_10], 1.0f)",
+            "    y_3: float32[1, 14505, 400] where y_3[v_11, v_12, v_13] = cast(float32, (y_2[v_11, v_12, v_13] / generic_max(p_norm[v_11, v_12], 1e-12f)))",
+            "    z_2: float32[1, 14505, 400] where z_2[v_14, v_15, v_16] = (x[0] - y_3[0, v_15, v_16])",
+            "    z: float32[1, 14505, 400] where z[v_17, v_18, v_19] = (z_2[0, v_18, v_19] - y[0, v_18, v_19])",
+            "  attributes: {fused_ops: subtract relu lp_norm subtract subtract, anchor: lp_norm}",
+            ")"
+          ]
+        },
+        {
+          "name": "4_Concat",
+          "type": {
+            "name": "Concat",
+            "category": null
+          },
+          "inputs": [
+            {
+              "name": "0",
+              "arguments": [
+                {
+                  "name": "3_FusedLpNorm:0",
+                  "type": {
+                    "string": "float32['1', '14505', '400']",
+                    "shape": {
+                      "dimensions": [
+                        "1",
+                        "14505",
+                        "400"
+                      ]
+                    },
+                    "dataType": "float32"
+                  }
+                }
+              ],
+              "visible": true
+            }
+          ],
+          "outputs": [
+            {
+              "name": "0",
+              "arguments": [
+                {
+                  "name": "4_Concat:0",
+                  "type": {
+                    "string": "float32['1', '14505', '400']",
+                    "shape": {
+                      "dimensions": [
+                        "1",
+                        "14505",
+                        "400"
+                      ]
+                    },
+                    "dataType": "float32"
+                  }
+                }
+              ],
+              "visible": true
+            }
+          ],
+          "attributes": [
+            {
+              "name": "axis",
+              "type": "int",
+              "value": "0",
+              "visible": true,
+              "description": ""
+            }
+          ],
+          "description": [
+            "Task(",
+            "  name: concat",
+            "  parameters: ",
+            "    x0: tensor(float32, [1, 14505, 400])",
+            "    out: tensor(float32, [1, 14505, 400])",
+            "  inputs: [x0]",
+            "  outputs: [out]",
+            "  computations: ",
+            "    out: float32[1, 14505, 400] where out[v, v_1, v_2] = x0[v, v_1, v_2]",
+            "  attributes: {}",
+            ")"
+          ]
+        }
+      ]
+    }
+  ],
+  "description": "Converted from FlowGraph",
+  "author": "",
+  "company": "",
+  "license": "",
+  "domain": "",
+  "source": "Hidet",
+  "format": "netron"
+}

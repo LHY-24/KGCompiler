@@ -1,0 +1,13 @@
+Graph(x: int64[1, 2][cuda], x_1: int64[1, 14505][cuda]){
+  c = Constant(float32[14505, 400][cuda])
+  c_1 = Constant(float32[474, 400][cuda])
+  c_2 = Constant(float32[1, 400][cuda])
+  c_3 = Constant(float32[474, 400][cuda])
+  c_4 = Constant(float32[1][cuda])
+  x_2: float32[1, 14505, 400][cuda] = FusedAbs(c, c_1, x_1, x, fused_graph=FlowGraph(StridedSlice, Squeeze, Reshape, Take, Reshape, StridedSlice, Squeeze, Take, StridedSlice, Squeeze, Take, Add, Concat, Unsqueeze, Subtract, Abs), anchor=15)  
+  x_3: float32[1, 1, 400][cuda] = FusedUnsqueeze(c_2, c_3, x, fused_graph=FlowGraph(StridedSlice, Squeeze, Take, Add, Concat, Unsqueeze), anchor=5)  
+  x_4: float32[1, 14505, 400][cuda] = FusedLpNorm(x_2, x_3, fused_graph=FlowGraph(Min, LpNorm, MultiplyScalar), anchor=1)  
+  x_5: float32[1, 14505, 400][cuda] = FusedLpNorm(c_4, x_4, x_2, x_3, fused_graph=FlowGraph(Subtract, Relu, LpNorm, Subtract, Subtract), anchor=2)  
+  x_6: float32[1, 14505, 400][cuda] = Concat(x_5, axis=0)  
+  return x_6
+}
