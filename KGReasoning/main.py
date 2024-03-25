@@ -27,19 +27,19 @@ from TimeCounter import TimeCounter
 import hidet
 
 # print graph
-# from torch._dynamo import optimize
-# from torch._inductor import graph
-# class CustomGraphLowering(graph.GraphLowering):
-#     def __init__(
-#         self,
-#         gm: torch.fx.GraphModule,
-#         *args,
-#         **kwargs,
-#     ):
-#         super().__init__(gm, *args, **kwargs)
-#         print("*"*30 + "Print Fx Graph" + "*"*30)
-#         gm.graph.print_tabular()
-# graph.GraphLowering = CustomGraphLowering
+from torch._dynamo import optimize
+from torch._inductor import graph
+class CustomGraphLowering(graph.GraphLowering):
+    def __init__(
+        self,
+        gm: torch.fx.GraphModule,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(gm, *args, **kwargs)
+        print("*"*30 + "Print Fx Graph" + "*"*30)
+        gm.graph.print_tabular()
+graph.GraphLowering = CustomGraphLowering
 
 
 # registe function
@@ -388,8 +388,8 @@ def main(args):
         query_name_dict = query_name_dict
     )
     # model = torch.compile(model, backend="inductor")   
-    # hidet.torch.dynamo_config.print_input_graph(True)
-    # hidet.torch.dynamo_config.dump_graph_ir("graph_hidet")
+    hidet.torch.dynamo_config.print_input_graph(True)
+    hidet.torch.dynamo_config.dump_graph_ir("graph_hidet")
     # hidet.torch.dynamo_config.correctness_report()
     model = torch.compile(model, backend="hidet")
 

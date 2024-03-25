@@ -12,45 +12,7 @@ import hidet
 
 class KgNormTask(Task):
     """
-        x [3, 4, 5] dim = 0 -> y[4, 5]
-        # compute primitive
-out = compute(
-    name='hint_name',
-    shape=[n1, n2, ..., nk],
-    fcompute=lambda i1, i2, ..., ik: f(i1, i2, ..., ik)
-)
-
-# semantics
-for i1 in range(n1):
-  for i2 in range(n2):
-    ...
-      for ik in range(nk):
-        out[i1, i2, ..., ik] = f(i1, i2, ..., ik)
-
-# reduce primitive
-out = reduce(
-    name='hint_name',
-    shape=[n1, n2, ..., nk],
-    fcompute=lambda i1, i2, ..., ik: f(i1, i2, ..., ik)
-    reduce_type='sum' | 'max' | 'min' | 'avg'
-)
-
-# semantics
-values = []
-for i1 in range(n1):
-  for i2 in range(n2):
-    ...
-      for ik in range(nk):
-        values.append(f(i1, i2, ..., ik))
-out = reduce_type(values)
-
-out[j][k] = sum_{i}(abs(in[i][j][k]))
-
-out = 
-
-for i:
-    for j:
-        
+        same as torch.norm
     """
 
     def __init__(self, x: TensorNode, p: float, dim: int, eps: float):
@@ -68,20 +30,22 @@ for i:
         def sum_compute(*indices):
             def sum_reduce(*reduction_axis):
                 x_indices = []
-                p = 0
+                _p = 0
                 q = 0
                 for i in range(len(x.shape)):
                     if i != dim:
-                        x_indices.append(indices[p])
-                        p += 1
+                        x_indices.append(indices[_p])
+                        _p += 1
                     else:
                         x_indices.append(reduction_axis[q])
                         q += 1
-                assert p == len(indices) and q == len(reduction_axis)
-                # Force fp32 reduction for accuracy
-                return prim.abs(x[x_indices])
+                assert _p == len(indices) and q == len(reduction_axis)
 
-            return reduce(shape=reduce_shape, fcompute=sum_reduce, reduce_type='sum')
+                return prim.pow(prim.abs(x[x_indices]), p)
+            y_sum = reduce(shape=reduce_shape, fcompute=sum_reduce, reduce_type='sum')
+            if p == 0 or p == 1:
+                return y_sum
+            return prim.pow(y_sum, 1/p)
 
         y = compute(name='y', shape=other_shape, fcompute=sum_compute)
 
@@ -91,19 +55,10 @@ for i:
             for k in K
                 values = []
                 for j in J:
-                    values.append(abs(x[i, j, k]))
-                out[i][k] = sum(values)
+                    values.append(abs(x[i, j, k]) ** p)
+                y_sum = sum(values)
+                out[i][k] = y_sum ** (1/p)
         """
-
-        # ops.reduce()
-        # p_norm = compute(name='p_norm', shape=other_shape, fcompute=lambda *indices: prim.pow(sum_[indices], 1.0 / p))
-
-        # def y_compute(*indices):
-        #     norm_indices = [index for i, index in enumerate(indices) if i != dim]
-        #     return cast(x[indices] / prim.max(p_norm[norm_indices], eps), dtype)
-
-
-        # y = reduce()
         super().__init__(name='kg_norm', inputs=[x], outputs=[y], attributes={'p': p, 'dim': dim})
 
 
@@ -113,14 +68,6 @@ class KgNormOp(Operator):
             inputs=[x], attributes={'p': p, 'dim': dim, 'eps': eps}, task=KgNormTask(input_like(x, 'x'), p, dim, eps)
         )
 
-'''
-input: Any,
-    p: float | str | None = "fro",
-    dim: Any | None = None,
-    keepdim: bool = False,
-    out: Any | None = None,
-    dtype: Any | None = None
-'''
 
 def kg_norm(input, p: Optional[Union[float, str]] = 1, dim=None, keepdim=False, out=None, dtype=None):
     """LP norm.
@@ -133,8 +80,6 @@ def kg_norm(input, p: Optional[Union[float, str]] = 1, dim=None, keepdim=False, 
         The exponent value in the norm formulation.
     dim: int
         The dimension to reduce.
-    eps: float
-        Small value to avoid division by zero.
 
     Returns
     -------
@@ -148,17 +93,21 @@ def kg_norm(input, p: Optional[Union[float, str]] = 1, dim=None, keepdim=False, 
     return KgNormOp(input, p, dim, eps).outputs[0]
 
 def test_norm():
+    p = 1
     dim = 0
     x = torch.rand([3, 4, 5])
+    print("x: ", x.shape)
     print(x)
-    y = torch.norm(x, p = 1, dim=dim)
+    print("*"*99)
+    y = torch.norm(x, p = p, dim=dim)
     print("torch: ", y.shape)
     print(y)
     print("*"*99)
 
     x_hidet = hidet.from_torch(x)
-    y_hidet = kg_norm(x_hidet, p = 1, dim=dim)
+    y_hidet = kg_norm(x_hidet, p = p, dim=dim)
     print("hidet: ", y_hidet.shape)
     print(y_hidet)
 
-test_norm()
+if __name__ == "__main__":
+    test_norm()
