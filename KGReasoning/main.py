@@ -8,7 +8,6 @@ import argparse
 import json
 import logging
 import os
-import random
 
 import numpy as np
 import torch
@@ -16,15 +15,17 @@ from torch.utils.data import DataLoader
 from models import KGReasoning
 from dataloader import TestDataset, TrainDataset, SingledirectionalOneShotIterator
 from tensorboardX import SummaryWriter
-import time
 import pickle
 from collections import defaultdict
 from tqdm import tqdm
 from util import flatten_query, list2tuple, parse_time, set_global_seed, eval_tuple
+from typing import Optional, Union, Sequence, Any, Tuple, List
+import functools
 
 from TimeCounter import TimeCounter
 
-# Print Fx Graph
+
+# Print Fx Graph in Torch Dynamo
 from torch._dynamo import optimize
 from torch._inductor import graph
 class CustomGraphLowering(graph.GraphLowering):
@@ -40,28 +41,10 @@ class CustomGraphLowering(graph.GraphLowering):
 graph.GraphLowering = CustomGraphLowering
 
 
-# Regist Hidet Operator
-from typing import Optional, Union, Sequence, Any, Tuple, List
-import functools
+# Regist Operator in Hidet
 import hidet
-
-# print graph
-from torch._dynamo import optimize
-from torch._inductor import graph
-class CustomGraphLowering(graph.GraphLowering):
-    def __init__(
-        self,
-        gm: torch.fx.GraphModule,
-        *args,
-        **kwargs,
-    ):
-        super().__init__(gm, *args, **kwargs)
-        print("*"*30 + "Print Fx Graph" + "*"*30)
-        gm.graph.print_tabular()
-graph.GraphLowering = CustomGraphLowering
-
-
-# registe function
+from hidet import Tensor
+from hidet.ir.dtypes import promote_type
 from hidet.graph import ops
 from hidet.graph.frontend.torch.register_functions import register_function
 from hidet.graph.frontend.torch.register_methods import register_method
@@ -539,7 +522,8 @@ def main(args):
         # print(prof.key_averages().table(sort_by="self_cpu_time_total"))
         
         from torch.profiler import profile, record_function, ProfilerActivity
-        with torch.autograd.profiler.profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA], record_shapes=True) as prof:
+        # with torch.autograd.profiler.profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA], record_shapes=True) as prof:
+        with torch.autograd.profiler.profile(enabled=True) as prof:
             test_all_metrics = evaluate(model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)    
         print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=10))
         
