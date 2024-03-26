@@ -44,8 +44,24 @@ graph.GraphLowering = CustomGraphLowering
 from typing import Optional, Union, Sequence, Any, Tuple, List
 import functools
 import hidet
-from hidet import Tensor
-from hidet.ir.dtypes import promote_type
+
+# print graph
+from torch._dynamo import optimize
+from torch._inductor import graph
+class CustomGraphLowering(graph.GraphLowering):
+    def __init__(
+        self,
+        gm: torch.fx.GraphModule,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(gm, *args, **kwargs)
+        print("*"*30 + "Print Fx Graph" + "*"*30)
+        gm.graph.print_tabular()
+graph.GraphLowering = CustomGraphLowering
+
+
+# registe function
 from hidet.graph import ops
 from hidet.graph.frontend.torch.register_functions import register_function
 from hidet.graph.frontend.torch.register_methods import register_method
