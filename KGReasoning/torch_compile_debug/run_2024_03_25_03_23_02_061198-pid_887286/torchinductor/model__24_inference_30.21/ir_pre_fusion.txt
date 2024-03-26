@@ -1,0 +1,519 @@
+buf0: SchedulerNode(ComputedBuffer)
+buf0.writes = [MemoryDep('buf0', c0, {c0: 1200})]
+buf0.unmet_dependencies = []
+buf0.met_dependencies = 
+    [   MemoryDep('arg12_1', 1, {}),
+        MemoryDep('arg12_1', 3, {}),
+        MemoryDep('arg12_1', 5, {}),
+        MemoryDep('arg2_1', 400*(tmp16) + c1, {c0: 3, c1: 400}),
+        MemoryDep('arg2_1', 400*(tmp25) + c1, {c0: 3, c1: 400}),
+        MemoryDep('arg2_1', 400*(tmp6) + c1, {c0: 3, c1: 400})]
+buf0.users = [NodeUser(node=ExternKernelSchedulerNode(name='buf6'), can_inplace=False, is_weak=False), NodeUser(node=SchedulerNode(name='buf9'), can_inplace=False, is_weak=False)]
+buf0.group.device = cuda:0
+buf0.group.iteration = (1200, 1)
+buf0.sizes = ([3, 400], [])
+class buf0_loop_body:
+    var_ranges = {z0: 3, z1: 400}
+    index0 = z0
+    index1 = 1
+    index2 = 400*indirect0 + z1
+    index3 = 3
+    index4 = 400*indirect1 + z1
+    index5 = 5
+    index6 = 400*indirect2 + z1
+    index7 = 400*z0 + z1
+    def body(self, ops):
+        get_index = self.get_index('index0')
+        index_expr = ops.index_expr(get_index, torch.int64)
+        constant = ops.constant(0, torch.int64)
+        ge = ops.ge(index_expr, constant)
+        get_index_1 = self.get_index('index0')
+        index_expr_1 = ops.index_expr(get_index_1, torch.int64)
+        constant_1 = ops.constant(1, torch.int64)
+        lt = ops.lt(index_expr_1, constant_1)
+        masked_subblock1 = self.masked_subblock1(lt, 0.0)
+        get_index_2 = self.get_index('index0')
+        index_expr_2 = ops.index_expr(get_index_2, torch.int64)
+        constant_2 = ops.constant(1, torch.int64)
+        ge_1 = ops.ge(index_expr_2, constant_2)
+        get_index_3 = self.get_index('index0')
+        index_expr_3 = ops.index_expr(get_index_3, torch.int64)
+        constant_3 = ops.constant(2, torch.int64)
+        lt_1 = ops.lt(index_expr_3, constant_3)
+        and_ = ops.and_(ge_1, lt_1)
+        masked_subblock3 = self.masked_subblock3(and_, 0.0)
+        get_index_4 = self.get_index('index0')
+        index_expr_4 = ops.index_expr(get_index_4, torch.int64)
+        constant_4 = ops.constant(2, torch.int64)
+        ge_2 = ops.ge(index_expr_4, constant_4)
+        get_index_5 = self.get_index('index0')
+        index_expr_5 = ops.index_expr(get_index_5, torch.int64)
+        constant_5 = ops.constant(3, torch.int64)
+        lt_2 = ops.lt(index_expr_5, constant_5)
+        masked_subblock5 = self.masked_subblock5(ge_2, 0.0)
+        where = ops.where(and_, masked_subblock3, masked_subblock5)
+        where_1 = ops.where(lt, masked_subblock1, where)
+        get_index_6 = self.get_index('index7')
+        store = ops.store('buf0', get_index_6, where_1, None)
+        return store
+    def masked_subblock1(self, ops):
+        get_index = self.get_index('index1')
+        load = ops.load('arg12_1', get_index)
+        set_indirect0 = self.set_indirect0(load)
+        get_index_1 = self.get_index('index2')
+        load_1 = ops.load('arg2_1', get_index_1)
+        return load_1
+    def masked_subblock3(self, ops):
+        get_index = self.get_index('index3')
+        load = ops.load('arg12_1', get_index)
+        set_indirect1 = self.set_indirect1(load)
+        get_index_1 = self.get_index('index4')
+        load_1 = ops.load('arg2_1', get_index_1)
+        return load_1
+    def masked_subblock5(self, ops):
+        get_index = self.get_index('index5')
+        load = ops.load('arg12_1', get_index)
+        set_indirect2 = self.set_indirect2(load)
+        get_index_1 = self.get_index('index6')
+        load_1 = ops.load('arg2_1', get_index_1)
+        return load_1
+
+
+buf1: SchedulerNode(ComputedBuffer)
+buf1.writes = [MemoryDep('buf1', c0, {c0: 1200})]
+buf1.unmet_dependencies = []
+buf1.met_dependencies = 
+    [   MemoryDep('arg0_1', 400*(tmp19) + c1, {c0: 3, c1: 400}),
+        MemoryDep('arg0_1', 400*(tmp31) + c1, {c0: 3, c1: 400}),
+        MemoryDep('arg0_1', 400*(tmp6) + c1, {c0: 3, c1: 400}),
+        MemoryDep('arg12_1', 0, {}),
+        MemoryDep('arg12_1', 1, {}),
+        MemoryDep('arg12_1', 2, {}),
+        MemoryDep('arg12_1', 3, {}),
+        MemoryDep('arg12_1', 4, {}),
+        MemoryDep('arg12_1', 5, {}),
+        MemoryDep('arg1_1', 400*(tmp21) + c1, {c0: 3, c1: 400}),
+        MemoryDep('arg1_1', 400*(tmp33) + c1, {c0: 3, c1: 400}),
+        MemoryDep('arg1_1', 400*(tmp8) + c1, {c0: 3, c1: 400})]
+buf1.users = [NodeUser(node=ExternKernelSchedulerNode(name='buf2'), can_inplace=False, is_weak=False), NodeUser(node=SchedulerNode(name='buf5'), can_inplace=False, is_weak=False)]
+buf1.group.device = cuda:0
+buf1.group.iteration = (1200, 1)
+buf1.sizes = ([3, 400], [])
+class buf1_loop_body:
+    var_ranges = {z0: 3, z1: 400}
+    index0 = z0
+    index1 = 0
+    index2 = 400*indirect0 + z1
+    index3 = 1
+    index4 = 400*indirect1 + z1
+    index5 = 2
+    index6 = 400*indirect2 + z1
+    index7 = 3
+    index8 = 400*indirect3 + z1
+    index9 = 4
+    index10 = 400*indirect4 + z1
+    index11 = 5
+    index12 = 400*indirect5 + z1
+    index13 = 400*z0 + z1
+    def body(self, ops):
+        get_index = self.get_index('index0')
+        index_expr = ops.index_expr(get_index, torch.int64)
+        constant = ops.constant(0, torch.int64)
+        ge = ops.ge(index_expr, constant)
+        get_index_1 = self.get_index('index0')
+        index_expr_1 = ops.index_expr(get_index_1, torch.int64)
+        constant_1 = ops.constant(1, torch.int64)
+        lt = ops.lt(index_expr_1, constant_1)
+        masked_subblock1 = self.masked_subblock1(lt, 0.0)
+        get_index_2 = self.get_index('index0')
+        index_expr_2 = ops.index_expr(get_index_2, torch.int64)
+        constant_2 = ops.constant(1, torch.int64)
+        ge_1 = ops.ge(index_expr_2, constant_2)
+        get_index_3 = self.get_index('index0')
+        index_expr_3 = ops.index_expr(get_index_3, torch.int64)
+        constant_3 = ops.constant(2, torch.int64)
+        lt_1 = ops.lt(index_expr_3, constant_3)
+        and_ = ops.and_(ge_1, lt_1)
+        masked_subblock4 = self.masked_subblock4(and_, 0.0)
+        get_index_4 = self.get_index('index0')
+        index_expr_4 = ops.index_expr(get_index_4, torch.int64)
+        constant_4 = ops.constant(2, torch.int64)
+        ge_2 = ops.ge(index_expr_4, constant_4)
+        get_index_5 = self.get_index('index0')
+        index_expr_5 = ops.index_expr(get_index_5, torch.int64)
+        constant_5 = ops.constant(3, torch.int64)
+        lt_2 = ops.lt(index_expr_5, constant_5)
+        masked_subblock7 = self.masked_subblock7(ge_2, 0.0)
+        where = ops.where(and_, masked_subblock4, masked_subblock7)
+        where_1 = ops.where(lt, masked_subblock1, where)
+        get_index_6 = self.get_index('index13')
+        store = ops.store('buf1', get_index_6, where_1, None)
+        return store
+    def masked_subblock1(self, ops):
+        get_index = self.get_index('index1')
+        load = ops.load('arg12_1', get_index)
+        set_indirect0 = self.set_indirect0(load)
+        get_index_1 = self.get_index('index2')
+        load_1 = ops.load('arg0_1', get_index_1)
+        get_index_2 = self.get_index('index3')
+        load_2 = ops.load('arg12_1', get_index_2)
+        set_indirect1 = self.set_indirect1(load_2)
+        get_index_3 = self.get_index('index4')
+        load_3 = ops.load('arg1_1', get_index_3)
+        add = ops.add(load_1, load_3)
+        return add
+    def masked_subblock4(self, ops):
+        get_index = self.get_index('index5')
+        load = ops.load('arg12_1', get_index)
+        set_indirect2 = self.set_indirect2(load)
+        get_index_1 = self.get_index('index6')
+        load_1 = ops.load('arg0_1', get_index_1)
+        get_index_2 = self.get_index('index7')
+        load_2 = ops.load('arg12_1', get_index_2)
+        set_indirect3 = self.set_indirect3(load_2)
+        get_index_3 = self.get_index('index8')
+        load_3 = ops.load('arg1_1', get_index_3)
+        add = ops.add(load_1, load_3)
+        return add
+    def masked_subblock7(self, ops):
+        get_index = self.get_index('index9')
+        load = ops.load('arg12_1', get_index)
+        set_indirect4 = self.set_indirect4(load)
+        get_index_1 = self.get_index('index10')
+        load_1 = ops.load('arg0_1', get_index_1)
+        get_index_2 = self.get_index('index11')
+        load_2 = ops.load('arg12_1', get_index_2)
+        set_indirect5 = self.set_indirect5(load_2)
+        get_index_3 = self.get_index('index12')
+        load_3 = ops.load('arg1_1', get_index_3)
+        add = ops.add(load_1, load_3)
+        return add
+
+
+buf2: ExternKernelSchedulerNode(ExternKernelOut)
+buf2.writes = [StarDep(name='buf2')]
+buf2.unmet_dependencies = [StarDep(name='buf1')]
+buf2.met_dependencies = [StarDep(name='arg3_1')]
+buf2.users = [NodeUser(node=SchedulerNode(name='buf3'), can_inplace=True, is_weak=False)]
+buf2.node.kernel = extern_kernels.mm
+
+
+buf3: SchedulerNode(ComputedBuffer)
+buf3.writes = [MemoryDep('buf3', c0, {c0: 1200})]
+buf3.unmet_dependencies = [MemoryDep('buf2', c0, {c0: 1200})]
+buf3.met_dependencies = [MemoryDep('arg4_1', c1, {c0: 3, c1: 400})]
+buf3.users = [NodeUser(node=ExternKernelSchedulerNode(name='buf4'), can_inplace=False, is_weak=False)]
+buf3.group.device = cuda:0
+buf3.group.iteration = (1200, 1)
+buf3.sizes = ([3, 400], [])
+class buf3_loop_body:
+    var_ranges = {z0: 3, z1: 400}
+    index0 = 400*z0 + z1
+    index1 = z1
+    def body(self, ops):
+        get_index = self.get_index('index0')
+        load = ops.load('buf2', get_index)
+        get_index_1 = self.get_index('index1')
+        load_1 = ops.load('arg4_1', get_index_1)
+        add = ops.add(load, load_1)
+        relu = ops.relu(add)
+        get_index_2 = self.get_index('index0')
+        store = ops.store('buf3', get_index_2, relu, None)
+        return store
+
+
+buf4: ExternKernelSchedulerNode(ExternKernelOut)
+buf4.writes = [StarDep(name='buf4')]
+buf4.unmet_dependencies = [StarDep(name='buf3')]
+buf4.met_dependencies = [StarDep(name='arg5_1'), StarDep(name='arg6_1')]
+buf4.users = [NodeUser(node=SchedulerNode(name='buf5'), can_inplace=False, is_weak=False)]
+buf4.node.kernel = extern_kernels.addmm
+
+
+buf5: SchedulerNode(ComputedBuffer)
+buf5.writes = [MemoryDep('buf5', c0, {c0: 400})]
+buf5.unmet_dependencies = 
+    [   MemoryDep('buf1', c0 + 400, {c0: 400}),
+        MemoryDep('buf1', c0 + 800, {c0: 400}),
+        MemoryDep('buf1', c0, {c0: 400}),
+        MemoryDep('buf4', c0 + 400, {c0: 400}),
+        MemoryDep('buf4', c0 + 800, {c0: 400}),
+        MemoryDep('buf4', c0, {c0: 400})]
+buf5.met_dependencies = []
+buf5.users = [NodeUser(node=OUTPUT, can_inplace=False, is_weak=False)]
+buf5.group.device = cuda:0
+buf5.group.iteration = (400, 1)
+buf5.sizes = ([400], [])
+class buf5_loop_body:
+    var_ranges = {z0: 400}
+    index0 = z0
+    index1 = z0 + 400
+    index2 = z0 + 800
+    def body(self, ops):
+        get_index = self.get_index('index0')
+        load = ops.load('buf4', get_index)
+        get_index_1 = self.get_index('index0')
+        load_1 = ops.load('buf4', get_index_1)
+        get_index_2 = self.get_index('index1')
+        load_2 = ops.load('buf4', get_index_2)
+        maximum = ops.maximum(load_1, load_2)
+        get_index_3 = self.get_index('index2')
+        load_3 = ops.load('buf4', get_index_3)
+        maximum_1 = ops.maximum(maximum, load_3)
+        sub = ops.sub(load, maximum_1)
+        exp = ops.exp(sub)
+        get_index_4 = self.get_index('index0')
+        load_4 = ops.load('buf4', get_index_4)
+        get_index_5 = self.get_index('index0')
+        load_5 = ops.load('buf4', get_index_5)
+        get_index_6 = self.get_index('index1')
+        load_6 = ops.load('buf4', get_index_6)
+        maximum_2 = ops.maximum(load_5, load_6)
+        get_index_7 = self.get_index('index2')
+        load_7 = ops.load('buf4', get_index_7)
+        maximum_3 = ops.maximum(maximum_2, load_7)
+        sub_1 = ops.sub(load_4, maximum_3)
+        exp_1 = ops.exp(sub_1)
+        get_index_8 = self.get_index('index1')
+        load_8 = ops.load('buf4', get_index_8)
+        get_index_9 = self.get_index('index0')
+        load_9 = ops.load('buf4', get_index_9)
+        get_index_10 = self.get_index('index1')
+        load_10 = ops.load('buf4', get_index_10)
+        maximum_4 = ops.maximum(load_9, load_10)
+        get_index_11 = self.get_index('index2')
+        load_11 = ops.load('buf4', get_index_11)
+        maximum_5 = ops.maximum(maximum_4, load_11)
+        sub_2 = ops.sub(load_8, maximum_5)
+        exp_2 = ops.exp(sub_2)
+        add = ops.add(exp_1, exp_2)
+        get_index_12 = self.get_index('index2')
+        load_12 = ops.load('buf4', get_index_12)
+        get_index_13 = self.get_index('index0')
+        load_13 = ops.load('buf4', get_index_13)
+        get_index_14 = self.get_index('index1')
+        load_14 = ops.load('buf4', get_index_14)
+        maximum_6 = ops.maximum(load_13, load_14)
+        get_index_15 = self.get_index('index2')
+        load_15 = ops.load('buf4', get_index_15)
+        maximum_7 = ops.maximum(maximum_6, load_15)
+        sub_3 = ops.sub(load_12, maximum_7)
+        exp_3 = ops.exp(sub_3)
+        add_1 = ops.add(add, exp_3)
+        truediv = ops.truediv(exp, add_1)
+        get_index_16 = self.get_index('index0')
+        load_16 = ops.load('buf1', get_index_16)
+        mul = ops.mul(truediv, load_16)
+        get_index_17 = self.get_index('index1')
+        load_17 = ops.load('buf4', get_index_17)
+        get_index_18 = self.get_index('index0')
+        load_18 = ops.load('buf4', get_index_18)
+        get_index_19 = self.get_index('index1')
+        load_19 = ops.load('buf4', get_index_19)
+        maximum_8 = ops.maximum(load_18, load_19)
+        get_index_20 = self.get_index('index2')
+        load_20 = ops.load('buf4', get_index_20)
+        maximum_9 = ops.maximum(maximum_8, load_20)
+        sub_4 = ops.sub(load_17, maximum_9)
+        exp_4 = ops.exp(sub_4)
+        get_index_21 = self.get_index('index0')
+        load_21 = ops.load('buf4', get_index_21)
+        get_index_22 = self.get_index('index0')
+        load_22 = ops.load('buf4', get_index_22)
+        get_index_23 = self.get_index('index1')
+        load_23 = ops.load('buf4', get_index_23)
+        maximum_10 = ops.maximum(load_22, load_23)
+        get_index_24 = self.get_index('index2')
+        load_24 = ops.load('buf4', get_index_24)
+        maximum_11 = ops.maximum(maximum_10, load_24)
+        sub_5 = ops.sub(load_21, maximum_11)
+        exp_5 = ops.exp(sub_5)
+        get_index_25 = self.get_index('index1')
+        load_25 = ops.load('buf4', get_index_25)
+        get_index_26 = self.get_index('index0')
+        load_26 = ops.load('buf4', get_index_26)
+        get_index_27 = self.get_index('index1')
+        load_27 = ops.load('buf4', get_index_27)
+        maximum_12 = ops.maximum(load_26, load_27)
+        get_index_28 = self.get_index('index2')
+        load_28 = ops.load('buf4', get_index_28)
+        maximum_13 = ops.maximum(maximum_12, load_28)
+        sub_6 = ops.sub(load_25, maximum_13)
+        exp_6 = ops.exp(sub_6)
+        add_2 = ops.add(exp_5, exp_6)
+        get_index_29 = self.get_index('index2')
+        load_29 = ops.load('buf4', get_index_29)
+        get_index_30 = self.get_index('index0')
+        load_30 = ops.load('buf4', get_index_30)
+        get_index_31 = self.get_index('index1')
+        load_31 = ops.load('buf4', get_index_31)
+        maximum_14 = ops.maximum(load_30, load_31)
+        get_index_32 = self.get_index('index2')
+        load_32 = ops.load('buf4', get_index_32)
+        maximum_15 = ops.maximum(maximum_14, load_32)
+        sub_7 = ops.sub(load_29, maximum_15)
+        exp_7 = ops.exp(sub_7)
+        add_3 = ops.add(add_2, exp_7)
+        truediv_1 = ops.truediv(exp_4, add_3)
+        get_index_33 = self.get_index('index1')
+        load_33 = ops.load('buf1', get_index_33)
+        mul_1 = ops.mul(truediv_1, load_33)
+        add_4 = ops.add(mul, mul_1)
+        get_index_34 = self.get_index('index2')
+        load_34 = ops.load('buf4', get_index_34)
+        get_index_35 = self.get_index('index0')
+        load_35 = ops.load('buf4', get_index_35)
+        get_index_36 = self.get_index('index1')
+        load_36 = ops.load('buf4', get_index_36)
+        maximum_16 = ops.maximum(load_35, load_36)
+        get_index_37 = self.get_index('index2')
+        load_37 = ops.load('buf4', get_index_37)
+        maximum_17 = ops.maximum(maximum_16, load_37)
+        sub_8 = ops.sub(load_34, maximum_17)
+        exp_8 = ops.exp(sub_8)
+        get_index_38 = self.get_index('index0')
+        load_38 = ops.load('buf4', get_index_38)
+        get_index_39 = self.get_index('index0')
+        load_39 = ops.load('buf4', get_index_39)
+        get_index_40 = self.get_index('index1')
+        load_40 = ops.load('buf4', get_index_40)
+        maximum_18 = ops.maximum(load_39, load_40)
+        get_index_41 = self.get_index('index2')
+        load_41 = ops.load('buf4', get_index_41)
+        maximum_19 = ops.maximum(maximum_18, load_41)
+        sub_9 = ops.sub(load_38, maximum_19)
+        exp_9 = ops.exp(sub_9)
+        get_index_42 = self.get_index('index1')
+        load_42 = ops.load('buf4', get_index_42)
+        get_index_43 = self.get_index('index0')
+        load_43 = ops.load('buf4', get_index_43)
+        get_index_44 = self.get_index('index1')
+        load_44 = ops.load('buf4', get_index_44)
+        maximum_20 = ops.maximum(load_43, load_44)
+        get_index_45 = self.get_index('index2')
+        load_45 = ops.load('buf4', get_index_45)
+        maximum_21 = ops.maximum(maximum_20, load_45)
+        sub_10 = ops.sub(load_42, maximum_21)
+        exp_10 = ops.exp(sub_10)
+        add_5 = ops.add(exp_9, exp_10)
+        get_index_46 = self.get_index('index2')
+        load_46 = ops.load('buf4', get_index_46)
+        get_index_47 = self.get_index('index0')
+        load_47 = ops.load('buf4', get_index_47)
+        get_index_48 = self.get_index('index1')
+        load_48 = ops.load('buf4', get_index_48)
+        maximum_22 = ops.maximum(load_47, load_48)
+        get_index_49 = self.get_index('index2')
+        load_49 = ops.load('buf4', get_index_49)
+        maximum_23 = ops.maximum(maximum_22, load_49)
+        sub_11 = ops.sub(load_46, maximum_23)
+        exp_11 = ops.exp(sub_11)
+        add_6 = ops.add(add_5, exp_11)
+        truediv_2 = ops.truediv(exp_8, add_6)
+        get_index_50 = self.get_index('index2')
+        load_50 = ops.load('buf1', get_index_50)
+        mul_2 = ops.mul(truediv_2, load_50)
+        add_7 = ops.add(add_4, mul_2)
+        get_index_51 = self.get_index('index0')
+        store = ops.store('buf5', get_index_51, add_7, None)
+        return store
+
+
+buf6: ExternKernelSchedulerNode(ExternKernelOut)
+buf6.writes = [StarDep(name='buf6')]
+buf6.unmet_dependencies = [StarDep(name='buf0')]
+buf6.met_dependencies = [StarDep(name='arg7_1')]
+buf6.users = [NodeUser(node=SchedulerNode(name='buf7'), can_inplace=False, is_weak=False)]
+buf6.node.kernel = extern_kernels.mm
+
+
+buf7: SchedulerNode(ComputedBuffer)
+buf7.writes = [MemoryDep('buf7', c0, {c0: 400})]
+buf7.unmet_dependencies = 
+    [   MemoryDep('buf6', c0 + 400, {c0: 400}),
+        MemoryDep('buf6', c0 + 800, {c0: 400}),
+        MemoryDep('buf6', c0, {c0: 400})]
+buf7.met_dependencies = [MemoryDep('arg8_1', c0, {c0: 400})]
+buf7.users = [NodeUser(node=ExternKernelSchedulerNode(name='buf8'), can_inplace=False, is_weak=False)]
+buf7.group.device = cuda:0
+buf7.group.iteration = (400, 1)
+buf7.sizes = ([400], [])
+class buf7_loop_body:
+    var_ranges = {z0: 400}
+    index0 = z0
+    index1 = z0 + 400
+    index2 = z0 + 800
+    def body(self, ops):
+        get_index = self.get_index('index0')
+        load = ops.load('buf6', get_index)
+        get_index_1 = self.get_index('index0')
+        load_1 = ops.load('arg8_1', get_index_1)
+        add = ops.add(load, load_1)
+        relu = ops.relu(add)
+        get_index_2 = self.get_index('index1')
+        load_2 = ops.load('buf6', get_index_2)
+        get_index_3 = self.get_index('index0')
+        load_3 = ops.load('arg8_1', get_index_3)
+        add_1 = ops.add(load_2, load_3)
+        relu_1 = ops.relu(add_1)
+        add_2 = ops.add(relu, relu_1)
+        get_index_4 = self.get_index('index2')
+        load_4 = ops.load('buf6', get_index_4)
+        get_index_5 = self.get_index('index0')
+        load_5 = ops.load('arg8_1', get_index_5)
+        add_3 = ops.add(load_4, load_5)
+        relu_2 = ops.relu(add_3)
+        add_4 = ops.add(add_2, relu_2)
+        constant = ops.constant(3.0, torch.float32)
+        truediv = ops.truediv(add_4, constant)
+        get_index_6 = self.get_index('index0')
+        store = ops.store('buf7', get_index_6, truediv, None)
+        return store
+
+
+buf8: ExternKernelSchedulerNode(ExternKernelOut)
+buf8.writes = [StarDep(name='buf8')]
+buf8.unmet_dependencies = [StarDep(name='buf7')]
+buf8.met_dependencies = [StarDep(name='arg9_1')]
+buf8.users = [NodeUser(node=SchedulerNode(name='buf9'), can_inplace=True, is_weak=False)]
+buf8.node.kernel = extern_kernels.mm
+
+
+buf9: SchedulerNode(ComputedBuffer)
+buf9.writes = [MemoryDep('buf9', c0, {c0: 400})]
+buf9.unmet_dependencies = 
+    [   MemoryDep('buf0', c0 + 400, {c0: 400}),
+        MemoryDep('buf0', c0 + 800, {c0: 400}),
+        MemoryDep('buf0', c0, {c0: 400}),
+        MemoryDep('buf8', c0, {c0: 400})]
+buf9.met_dependencies = [MemoryDep('arg10_1', c0, {c0: 400})]
+buf9.users = [NodeUser(node=OUTPUT, can_inplace=False, is_weak=False)]
+buf9.group.device = cuda:0
+buf9.group.iteration = (400, 1)
+buf9.sizes = ([400], [])
+class buf9_loop_body:
+    var_ranges = {z0: 400}
+    index0 = z0
+    index1 = z0 + 400
+    index2 = z0 + 800
+    def body(self, ops):
+        get_index = self.get_index('index0')
+        load = ops.load('buf0', get_index)
+        get_index_1 = self.get_index('index1')
+        load_1 = ops.load('buf0', get_index_1)
+        minimum = ops.minimum(load, load_1)
+        get_index_2 = self.get_index('index2')
+        load_2 = ops.load('buf0', get_index_2)
+        minimum_1 = ops.minimum(minimum, load_2)
+        get_index_3 = self.get_index('index0')
+        load_3 = ops.load('buf8', get_index_3)
+        get_index_4 = self.get_index('index0')
+        load_4 = ops.load('arg10_1', get_index_4)
+        add = ops.add(load_3, load_4)
+        sigmoid = ops.sigmoid(add)
+        mul = ops.mul(minimum_1, sigmoid)
+        get_index_5 = self.get_index('index0')
+        store = ops.store('buf9', get_index_5, mul, None)
+        return store
+
+
