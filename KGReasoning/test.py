@@ -61,6 +61,18 @@ def test_norm():
     print("hidet: ", y_hidet.shape)
     print(y_hidet)
 
-test_norm()
 
+def test_broadcast_tensor():
+    x = torch.arange(3).view(1, 3)
+    y = torch.arange(2).view(2, 1)
+    z = torch.arange(4).view(2, 2)
+    a, b, c = torch.broadcast_tensors(x, y, z)
+    print(a, b, c)
+
+
+def main():
+    test_broadcast_tensor()
+
+if __name__ == "__main__":
+    main()
 

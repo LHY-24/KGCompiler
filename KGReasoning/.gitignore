@@ -7,3 +7,4 @@ data/
 *.pdf
 *.eps
 submission/
+.vscode/

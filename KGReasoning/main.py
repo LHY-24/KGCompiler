@@ -26,19 +26,19 @@ from TimeCounter import TimeCounter
 
 
 # Print Fx Graph in Torch Dynamo
-from torch._dynamo import optimize
-from torch._inductor import graph
-class CustomGraphLowering(graph.GraphLowering):
-    def __init__(
-        self,
-        gm: torch.fx.GraphModule,
-        *args,
-        **kwargs,
-    ):
-        super().__init__(gm, *args, **kwargs)
-        print("*"*30 + "Print Fx Graph" + "*"*30)
-        # gm.graph.print_tabular()
-graph.GraphLowering = CustomGraphLowering
+# from torch._dynamo import optimize
+# from torch._inductor import graph
+# class CustomGraphLowering(graph.GraphLowering):
+#     def __init__(
+#         self,
+#         gm: torch.fx.GraphModule,
+#         *args,
+#         **kwargs,
+#     ):
+#         super().__init__(gm, *args, **kwargs)
+#         print("*"*30 + "Print Fx Graph" + "*"*30)
+#         gm.graph.print_tabular()
+# graph.GraphLowering = CustomGraphLowering
 
 
 # Regist Operator in Hidet
@@ -393,12 +393,12 @@ def main(args):
         test_batch_size=args.test_batch_size,
         query_name_dict = query_name_dict
     )
-    model = torch.compile(model, backend="inductor")   
+    # model = torch.compile(model, backend="inductor")
 
     # hidet.torch.dynamo_config.print_input_graph(True)
     # hidet.torch.dynamo_config.dump_graph_ir("graph_hidet")
     # hidet.torch.dynamo_config.correctness_report()
-    # model = torch.compile(model, backend="hidet")
+    model = torch.compile(model, backend="hidet")
 
     logging.info('Model Parameter Configuration:')
     num_params = 0
@@ -521,17 +521,18 @@ def main(args):
             # test_all_metrics = evaluate(model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)
         # print(prof.key_averages().table(sort_by="self_cpu_time_total"))
         
-        from torch.profiler import profile, record_function, ProfilerActivity
+        # from torch.profiler import profile, record_function, ProfilerActivity
         # with torch.autograd.profiler.profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA], record_shapes=True) as prof:
-        with torch.autograd.profiler.profile(enabled=True) as prof:
-            test_all_metrics = evaluate(model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)    
-        print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=10))
+        # with torch.autograd.profiler.profile(enabled=True) as prof:
+        test_all_metrics = evaluate(model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)    
+        # print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=10))
         
         # with open("output.txt", 'a') as f:
         #     print("hidet", test_all_metrics, file=f)
         #     print("*"*99, file=f)
         
     logging.info("Training finished!!")
+
 
 if __name__ == '__main__':
     main(parse_args())

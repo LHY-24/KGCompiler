@@ -312,7 +312,7 @@ class KGReasoning(nn.Module):
     def cal_logit_beta(self, entity_embedding, query_dist):
         alpha_embedding, beta_embedding = torch.chunk(entity_embedding, 2, dim=-1)
         entity_dist = torch.distributions.beta.Beta(alpha_embedding, beta_embedding)
-        logit = self.gamma - torch.norm(torch.distributions.kl.kl_divergence(entity_dist, query_dist), p=1, dim=-1)
+        logit = self.gamma - torch.norm(torch.distributions.kl._kl_beta_beta(entity_dist, query_dist), p=1, dim=-1)
         return logit
 
     def forward_beta(self, positive_sample, negative_sample, subsampling_weight, batch_queries_dict, batch_idxs_dict):
