@@ -22,7 +22,7 @@ from util import flatten_query, list2tuple, parse_time, set_global_seed, eval_tu
 from typing import Optional, Union, Sequence, Any, Tuple, List
 import functools
 
-from TimeCounter import TimeCounter
+from utils.TimeCounter import TimeCounter
 
 
 # Print Fx Graph in Torch Dynamo
