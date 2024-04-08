@@ -22,6 +22,8 @@ from util import flatten_query, list2tuple, parse_time, set_global_seed, eval_tu
 from typing import Optional, Union, Sequence, Any, Tuple, List
 import functools
 
+import sys
+sys.path.append("..")
 from utils.TimeCounter import TimeCounter
 
 
@@ -53,7 +55,7 @@ from hidet.graph.frontend.torch.register_methods import register_method
 def torch_tensor(x):
     return hidet.asarray(x)
 
-from hidet_norm import kg_norm
+from utils.hidet_norm import kg_norm
 @register_function(torch.norm)
 def torch_norm(x, p=2, dim=1):
     return kg_norm(x, p, dim)
