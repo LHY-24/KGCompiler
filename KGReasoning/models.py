@@ -611,81 +611,98 @@ class KGReasoning(nn.Module):
         total_steps = len(test_dataloader)
         logs = collections.defaultdict(list)
 
-        with torch.no_grad():
-            for negative_sample, queries, queries_unflatten, query_structures in tqdm(test_dataloader, disable=not args.print_on_screen):
-                batch_queries_dict = collections.defaultdict(list)
-                batch_idxs_dict = collections.defaultdict(list)
-                for i, query in enumerate(queries):
-                    batch_queries_dict[query_structures[i]].append(query)
-                    batch_idxs_dict[query_structures[i]].append(i)
-                for query_structure in batch_queries_dict:
+        with torch.profiler.profile(
+            activities=[
+            torch.profiler.ProfilerActivity.CPU,
+            torch.profiler.ProfilerActivity.CUDA],
+            schedule=torch.profiler.schedule(
+            wait=1,
+            warmup=1,
+            active=100
+            ),
+        on_trace_ready=torch.profiler.tensorboard_trace_handler('./result', worker_name='hidet-1p.2p.3p.2i.3i.ip.pi.2u.up'),
+        # record_shapes=True,
+        profile_memory=True,  # This will take 1 to 2 minutes. Setting it to False could greatly speedup.
+        # with_stack=True
+        ) as p:
+            with torch.no_grad():
+                for negative_sample, queries, queries_unflatten, query_structures in tqdm(test_dataloader, disable=not args.print_on_screen):
+                    batch_queries_dict = collections.defaultdict(list)
+                    batch_idxs_dict = collections.defaultdict(list)
+                    for i, query in enumerate(queries):
+                        batch_queries_dict[query_structures[i]].append(query)
+                        batch_idxs_dict[query_structures[i]].append(i)
+                    for query_structure in batch_queries_dict:
+                        if args.cuda:
+                            batch_queries_dict[query_structure] = torch.LongTensor(batch_queries_dict[query_structure]).cuda()
+                        else:
+                            batch_queries_dict[query_structure] = torch.LongTensor(batch_queries_dict[query_structure])
                     if args.cuda:
-                        batch_queries_dict[query_structure] = torch.LongTensor(batch_queries_dict[query_structure]).cuda()
-                    else:
-                        batch_queries_dict[query_structure] = torch.LongTensor(batch_queries_dict[query_structure])
-                if args.cuda:
-                    negative_sample = negative_sample.cuda()
+                        negative_sample = negative_sample.cuda()
 
-                # with open("output.txt", 'a') as f:
-                #     print("negative_sample, shape=", negative_sample.shape, negative_sample, file=f)
-                #     print("batch_queries_dict", batch_queries_dict, file=f)
-                #     print("batch_idxs_dict", batch_idxs_dict, file=f)
-                #     print("*"*99, file=f)
-                # exit()
-                _, negative_logit, _, idxs = model(None, negative_sample, None, batch_queries_dict, batch_idxs_dict)
+                    # with open("output.txt", 'a') as f:
+                    #     print("negative_sample, shape=", negative_sample.shape, negative_sample, file=f)
+                    #     print("batch_queries_dict", batch_queries_dict, file=f)
+                    #     print("batch_idxs_dict", batch_idxs_dict, file=f)
+                    #     print("*"*99, file=f)
+                    # exit()
+                    _, negative_logit, _, idxs = model(None, negative_sample, None, batch_queries_dict, batch_idxs_dict)
 
-                queries_unflatten = [queries_unflatten[i] for i in idxs]
-                query_structures = [query_structures[i] for i in idxs]
-                argsort = torch.argsort(negative_logit, dim=1, descending=True)
-                ranking = argsort.clone().to(torch.float)
-                if len(argsort) == args.test_batch_size: # if it is the same shape with test_batch_size, we can reuse batch_entity_range without creating a new one
-                    ranking = ranking.scatter_(1, argsort, model.batch_entity_range) # achieve the ranking of all entities
-                else: # otherwise, create a new torch Tensor for batch_entity_range
-                    if args.cuda:
-                        ranking = ranking.scatter_(1, 
-                                                   argsort, 
-                                                   torch.arange(model.nentity).to(torch.float).repeat(argsort.shape[0], 
-                                                                                                      1).cuda()
-                                                   ) # achieve the ranking of all entities
-                    else:
-                        ranking = ranking.scatter_(1, 
-                                                   argsort, 
-                                                   torch.arange(model.nentity).to(torch.float).repeat(argsort.shape[0], 
-                                                                                                      1)
-                                                   ) # achieve the ranking of all entities
-                for idx, (i, query, query_structure) in enumerate(zip(argsort[:, 0], queries_unflatten, query_structures)):
-                    hard_answer = hard_answers[query]
-                    easy_answer = easy_answers[query]
-                    num_hard = len(hard_answer)
-                    num_easy = len(easy_answer)
-                    assert len(hard_answer.intersection(easy_answer)) == 0
-                    cur_ranking = ranking[idx, list(easy_answer) + list(hard_answer)]
-                    cur_ranking, indices = torch.sort(cur_ranking)
-                    masks = indices >= num_easy
-                    if args.cuda:
-                        answer_list = torch.arange(num_hard + num_easy).to(torch.float).cuda()
-                    else:
-                        answer_list = torch.arange(num_hard + num_easy).to(torch.float)
-                    cur_ranking = cur_ranking - answer_list + 1 # filtered setting
-                    cur_ranking = cur_ranking[masks] # only take indices that belong to the hard answers
+                    queries_unflatten = [queries_unflatten[i] for i in idxs]
+                    query_structures = [query_structures[i] for i in idxs]
+                    argsort = torch.argsort(negative_logit, dim=1, descending=True)
+                    ranking = argsort.clone().to(torch.float)
+                    if len(argsort) == args.test_batch_size: # if it is the same shape with test_batch_size, we can reuse batch_entity_range without creating a new one
+                        ranking = ranking.scatter_(1, argsort, model.batch_entity_range) # achieve the ranking of all entities
+                    else: # otherwise, create a new torch Tensor for batch_entity_range
+                        if args.cuda:
+                            ranking = ranking.scatter_(1, 
+                                                    argsort, 
+                                                    torch.arange(model.nentity).to(torch.float).repeat(argsort.shape[0], 
+                                                                                                        1).cuda()
+                                                    ) # achieve the ranking of all entities
+                        else:
+                            ranking = ranking.scatter_(1, 
+                                                    argsort, 
+                                                    torch.arange(model.nentity).to(torch.float).repeat(argsort.shape[0], 
+                                                                                                        1)
+                                                    ) # achieve the ranking of all entities
+                    
+                    for idx, (i, query, query_structure) in enumerate(zip(argsort[:, 0], queries_unflatten, query_structures)):
+                        hard_answer = hard_answers[query]
+                        easy_answer = easy_answers[query]
+                        num_hard = len(hard_answer)
+                        num_easy = len(easy_answer)
+                        assert len(hard_answer.intersection(easy_answer)) == 0
+                        cur_ranking = ranking[idx, list(easy_answer) + list(hard_answer)]
+                        cur_ranking, indices = torch.sort(cur_ranking)
+                        masks = indices >= num_easy
+                        if args.cuda:
+                            answer_list = torch.arange(num_hard + num_easy).to(torch.float).cuda()
+                        else:
+                            answer_list = torch.arange(num_hard + num_easy).to(torch.float)
+                        cur_ranking = cur_ranking - answer_list + 1 # filtered setting
+                        cur_ranking = cur_ranking[masks] # only take indices that belong to the hard answers
 
-                    mrr = torch.mean(1./cur_ranking).item()
-                    h1 = torch.mean((cur_ranking <= 1).to(torch.float)).item()
-                    h3 = torch.mean((cur_ranking <= 3).to(torch.float)).item()
-                    h10 = torch.mean((cur_ranking <= 10).to(torch.float)).item()
+                        mrr = torch.mean(1./cur_ranking).item()
+                        h1 = torch.mean((cur_ranking <= 1).to(torch.float)).item()
+                        h3 = torch.mean((cur_ranking <= 3).to(torch.float)).item()
+                        h10 = torch.mean((cur_ranking <= 10).to(torch.float)).item()
 
-                    logs[query_structure].append({
-                        'MRR': mrr,
-                        'HITS1': h1,
-                        'HITS3': h3,
-                        'HITS10': h10,
-                        'num_hard_answer': num_hard,
-                    })
+                        logs[query_structure].append({
+                            'MRR': mrr,
+                            'HITS1': h1,
+                            'HITS3': h3,
+                            'HITS10': h10,
+                            'num_hard_answer': num_hard,
+                        })
 
-                if step % args.test_log_steps == 0:
-                    logging.info('Evaluating the model... (%d/%d)' % (step, total_steps))
+                    if step % args.test_log_steps == 0:
+                        logging.info('Evaluating the model... (%d/%d)' % (step, total_steps))
 
-                step += 1
+                    step += 1
+                    p.step()
+                    
 
         metrics = collections.defaultdict(lambda: collections.defaultdict(int))
         for query_structure in logs:
