@@ -90,6 +90,25 @@ def tensor_reshape_method(self: Tensor, shape) -> Tensor:
 def tensor_reshape_function(self: Tensor, shape) -> Tensor:
     return ops.reshape(self, shape)
 
+def get_broadcast_shape(x: Tensor, y: Tensor):
+    broadcase_shape = []
+    x_shape = x.shape
+    y_shape = y.shape
+    dim = max(len(x_shape), len(y_shape))
+    for i in reversed(range(dim)):
+        x_shape_i = 1 if i > len(x_shape)-1 else x_shape[i]
+        y_shape_i = 1 if i > len(y_shape)-1 else y_shape[i]
+        assert x_shape_i == 1 or y_shape_i == 1
+        broadcase_shape.append(x_shape_i if y_shape_i == 1 else y_shape_i)
+    return list(reversed(broadcase_shape))
+
+@register_function(torch.broadcast_tensors)
+def broadcast_tensors(x: Tensor, y: Tensor):
+    broadcast_tensors = get_broadcast_shape(x, y)
+    a = ops.broadcast(x, broadcast_tensors)
+    b = ops.broadcast(y, broadcast_tensors)
+    return a, b
+
 
 @register_function(torch.broadcast_tensors)
 def broadcast_tensors(*tensors):
