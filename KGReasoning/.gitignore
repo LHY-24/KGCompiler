@@ -8,3 +8,5 @@ data/
 *.eps
 submission/
 .vscode/
+graph_hidet/
+result/
