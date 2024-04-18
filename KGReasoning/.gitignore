@@ -10,3 +10,4 @@ submission/
 .vscode/
 graph_hidet/
 result/
+dump-graph/
