@@ -234,9 +234,9 @@ def flatten(x: Tensor, start_dim: int, end_dim: int = -1):
 def getitem(x: Tensor, index):
     if isinstance(index, (list, tuple)):
         if all(isinstance(item, int) for item in index):
-            # x[[1, 2, 3, 4..]]
+            # x[[1, 2, 3, 4..]], all element are all int
             from hidet import asarray
-            return ops.take(x, asarray(index))
+            return ops.take(x, asarray(index, device=x.device))
         elif any(isinstance(item, slice) for item in index):
             # x[(1:2, 1, 2, 3)], one element of idx is slice
             start_list = []
@@ -450,6 +450,8 @@ def truediv(x: Union[Tensor, int, float], y: Union[Tensor, int, float]):
     elif isinstance(x, (int, float)) and isinstance(y, Tensor):
         x = hidet.asarray(x).to(device=y.device)
         return ops.cast(x, 'float32') / y
+    elif is_integer(x) and is_integer(y):
+        return x / ops.cast(y, dtype=hidet.float32)
     else:
         return x / y
 
