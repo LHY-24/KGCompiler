@@ -32,7 +32,7 @@ class DigammaTask(Task):
                 fcompute = lambda i : k[i],
                 reduce_type = "sum"
             )
-
+            # return sum_k
             # while x < 8: x += 1
             x_1 = 8 + x - expr.cast(x, "int32")
             x_1 = expr.cast(x_1, datatype)
@@ -56,15 +56,7 @@ class DigammaTask(Task):
 
         def digamma_compute(*indices):
             x_i = x[indices]
-            return expr.if_then_else(
-                cond=expr.equal(x_i, 0),
-                then_expr=expr.cast(-99999999999, datatype),
-                else_expr=expr.if_then_else(
-                    cond=expr.less_than(x_i, 0),
-                    then_expr=x_lessthan_0_then_part(x_i),
-                    else_expr=x_lessthan_0_else_part(x_i)
-                )
-            )
+            return compute_func_1(x_i)
         
         y = compute(
             name = "y",
@@ -89,12 +81,8 @@ def digamma(input):
 
 def test_digamma():
     x = torch.Tensor([0.9988, 1.1198, 0.81]).float()
-    y = torch.digamma(x)
-    print("*"*20, "torch", "*"*20)
-    print(y)
     x_hidet = hidet.from_torch(x)
     y_hidet = digamma(x_hidet)
-    print("*"*20, "hidet", "*"*20)
     print(y_hidet)
 
 

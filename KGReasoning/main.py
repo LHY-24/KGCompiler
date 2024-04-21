@@ -54,6 +54,7 @@ from hidet.graph.frontend.torch.register_methods import register_method
 import sys
 sys.path.append("..")
 
+# 导致correct report 不可用
 @register_function(torch.nn.functional.Tensor)
 def torch_tensor(x):
     return hidet.asarray(x)
@@ -110,8 +111,14 @@ def torch_digamma(x):
 
 from utils.hidet_gamma import lgamma
 @register_method(torch.Tensor.lgamma)
-def register_function(self: Tensor) -> Tensor:
+def torch_lgamma(self: Tensor) -> Tensor:
     return lgamma(self)
+
+@register_function(torch._assert_async)
+def torch_assert_async(x, assert_msg):
+    return None
+
+
 
 query_name_dict = {('e',('r',)): '1p', 
                     ('e', ('r', 'r')): '2p',
@@ -427,7 +434,11 @@ def main(args):
     # model = torch.compile(model, backend="inductor")
 
     # hidet.torch.dynamo_config.print_input_graph(True)
-    # hidet.torch.dynamo_config.dump_graph_ir("graph_hidet")
+
+    # import datetime
+    # current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    # hidet.torch.dynamo_config.dump_graph_ir("graph_hidet/" + current_time + args.geo)
+
     # hidet.torch.dynamo_config.correctness_report()
     # hidet.torch.dynamo_config.print_input_graph()
     model = torch.compile(model, backend="hidet")

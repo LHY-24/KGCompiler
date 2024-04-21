@@ -73,7 +73,7 @@ def test_gamma():
 
 from hidet import ops
 def test_lgamma():
-    x_torch = torch.asarray([1.2, 2, 3.4])
+    x_torch = torch.asarray([-2.1, 3.9, 5.2])
     y_tensor = torch.lgamma(x_torch)
     print("*"*20, "torch", "*"*20)
     print(y_tensor)

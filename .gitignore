@@ -3,3 +3,4 @@ torch_compile_debug/
 logs-debug/
 .vscode/
 logs/
+hidet_graph/

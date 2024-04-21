@@ -229,9 +229,37 @@ def flatten(x: Tensor, start_dim: int, end_dim: int = -1):
     return ops.flatten(x, start_dim, end_dim)
 
 
+# changed
 @register_function(operator.getitem)
 def getitem(x: Tensor, index):
+    if isinstance(index, (list, tuple)):
+        if all(isinstance(item, int) for item in index):
+            # x[[1, 2, 3, 4..]]
+            from hidet import asarray
+            return ops.take(x, asarray(index))
+        elif any(isinstance(item, slice) for item in index):
+            # x[(1:2, 1, 2, 3)], one element of idx is slice
+            start_list = []
+            stop_list = []
+            target_shape = []
+            for i, item in enumerate(index):
+                if isinstance(item, slice):
+                    start_index = 0 if item.start is None else item.start
+                    stop_index = x.shape[i] if item.stop is None else item.stop
+                    start_list.append(start_index)
+                    stop_list.append(stop_index)
+                    target_shape.append(stop_index - start_index)
+                elif isinstance(item, int):
+                    start_list.append(item)
+                    stop_list.append(item + 1)
+                else:
+                    assert False
+            target_shape += x.shape[len(index):]
+            return ops.reshape(ops.strided_slice(x, start_list, stop_list), shape=target_shape)
+        
     return x[index]
+
+
 
 
 @register_function(operator.setitem)
@@ -407,6 +435,7 @@ def interpolate(
     )
 
 
+# changed
 @register_function(operator.truediv)
 def truediv(x: Union[Tensor, int, float], y: Union[Tensor, int, float]):
     import hidet
@@ -414,10 +443,13 @@ def truediv(x: Union[Tensor, int, float], y: Union[Tensor, int, float]):
     def is_integer(v: Union[Tensor, int, float]) -> bool:
         return isinstance(v, int) or (isinstance(v, Tensor) and v.dtype.is_integer())
 
-    if is_integer(x) and is_integer(y):
-        if isinstance(y, (int, float)):
-            y = hidet.asarray(y).to(device=x.device)
+    # if is_integer(x) and is_integer(y):
+    if isinstance(y, (int, float)) and isinstance(x, Tensor):
+        y = hidet.asarray(y).to(device=x.device)
         return x / ops.cast(y, 'float32')
+    elif isinstance(x, (int, float)) and isinstance(y, Tensor):
+        x = hidet.asarray(x).to(device=y.device)
+        return ops.cast(x, 'float32') / y
     else:
         return x / y
 

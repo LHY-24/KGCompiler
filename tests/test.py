@@ -123,13 +123,14 @@ def test_torch_digamma():
     # 0 < x < 8
     def compute_2(x):
         k = []
-        for i in range(8 - x // 1):
+        for i in range(int(8 - x // 1)):
             k.append(1 / (x + i))
         
         sum_k = sum(k)
-        print("sum_k: ", sum_k)
+        # print("sum_k: ", sum_k)
 
         x_1 = 8 + x % 1
+        print("x_1: ", x_1)
         xx = 1 / (x_1 * x_1)
         ret = -sum_k + math.log(x_1) - 0.5 / x_1 - xx * (1 / 12 - xx * (1 / 120 + xx / 252))
         return ret
@@ -158,9 +159,10 @@ def test_torch_digamma():
             return compute_1(x)
 
 
-    print(torch.digamma(torch.Tensor([2])))
-    print(digamma(2))
-
+    print(torch.digamma(torch.Tensor([[0.9988, 1.1198, 0.81]])))
+    print(digamma(0.9988))
+    print(digamma(1.1198))
+    print(digamma(0.81))
 
 def test_tan():
     # test_torch_digamma()
@@ -252,8 +254,96 @@ def test_reshape():
     y_hidet = ops.reshape(x_hidet, [2, -1])
     print(reshape(x_hidet, [2, -1]))
 
+def test_clamp():
+    def test(x):
+        return torch.clamp(x, 1, 3)
+    from hidet.graph.frontend.torch.register_functions import clamp
+    hidet.torch.dynamo_config.dump_graph_ir("hidet_graph")
+    x = torch.Tensor([1, 2, 3])
+    test_opt = torch.compile(test, backend="hidet")
+    y = test_opt(x)
+    print(y)
+
+def test_truediv():
+    def truediv(x, y):
+        return x / y
+    opt_div = torch.compile(truediv, backend="hidet")
+    x_tensor_int = torch.asarray([2, 3, 4], dtype=torch.int)
+    x_tensor_float = torch.asarray([2.1, 2.2, 2.3], dtype=torch.float)
+    x_int = int(2)
+    x_float = float(3.1)
+    x_l = [x_tensor_int, x_tensor_float, x_int, x_float]
+
+    y_tensor_int = torch.asarray([1, 1, 1], dtype=torch.int)
+    y_tensor_float = torch.asarray([3.1, 3.2, 3.3], dtype=torch.float)
+    y_int = int(4)
+    y_float = float(5.2)
+    y_l = [y_tensor_int, y_tensor_float, y_int, y_float]
+
+    for x in x_l:
+        for y in y_l:
+            print("*"*20, x.dtype if isinstance(x, torch.Tensor) else type(x), " div ", y.dtype if isinstance(y, torch.Tensor) else type(y), "*"*20)
+            z = truediv(x, y)
+            z_hidet = opt_div(x, y)
+            print("eager: ", z)
+            print("hidet: ", z_hidet)
+
+
+def test_correct():
+    def func(a):
+        x = torch.empty(0)
+        return torch.cat(x, a)
+
+    hidet.torch.dynamo_config.correctness_report()
+    opt_func = torch.compile(func, backend="hidet")
+    x = torch.asarray([2, 3, 4])
+    y = torch.asarray([4, 5, 6])
+    z = opt_func(x)
+    print(z)
+
+def test_torch_empty():
+    x = torch.empty(0)
+    # x
+    # y = torch.Tensor([])
+    # print(x)
+
+    x_hidet = hidet.asarray([], dtype=hidet.int32)
+    y_hidet = hidet.asarray([2,3,4], dtype=hidet.int32)
+    print(ops.concat([x_hidet, y_hidet], 0))
+
+def test_getitem():
+    x = torch.randn([3, 3, 3])
+    print("x: ", x)
+    
+    print("================== x[list[int]] ==================")
+    def func1(x):
+        idx = [2, 0, 1]
+        return x[idx]    
+    opt_func1 = torch.compile(func1, backend="hidet")
+
+    print(func1(x))
+    print(opt_func1(x))
+    
+    print("================== x[list[int|slice]] ==================")
+    def func2(x):
+        return x[:, 1, :]
+    
+    opt_func2 = torch.compile(func2, backend="hidet")
+    print(func2(x))
+    print(opt_func2(x))
+
+
+    # x_hidet = hidet.from_torch(x)
+    # idx = [1, 1]
+    # y = x[idx]
+    # print("y: ", y)
+
+    # y_hidet = ops.take(x_hidet, hidet.asarray(idx))
+    # print("y_hidet: ", y_hidet)
+
+
 def main():
-    test_reshape()
+    test_getitem()
 
 if __name__ == "__main__":
     main()
