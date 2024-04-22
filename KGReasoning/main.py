@@ -91,25 +91,6 @@ def tensor_reshape_method(self: Tensor, shape) -> Tensor:
 def tensor_reshape_function(self: Tensor, shape) -> Tensor:
     return ops.reshape(self, shape)
 
-def get_broadcast_shape(x: Tensor, y: Tensor):
-    broadcase_shape = []
-    x_shape = x.shape
-    y_shape = y.shape
-    dim = max(len(x_shape), len(y_shape))
-    for i in reversed(range(dim)):
-        x_shape_i = 1 if i > len(x_shape)-1 else x_shape[i]
-        y_shape_i = 1 if i > len(y_shape)-1 else y_shape[i]
-        assert x_shape_i == 1 or y_shape_i == 1
-        broadcase_shape.append(x_shape_i if y_shape_i == 1 else y_shape_i)
-    return list(reversed(broadcase_shape))
-
-@register_function(torch.broadcast_tensors)
-def broadcast_tensors(x: Tensor, y: Tensor):
-    broadcast_tensors = get_broadcast_shape(x, y)
-    a = ops.broadcast(x, broadcast_tensors)
-    b = ops.broadcast(y, broadcast_tensors)
-    return a, b
-
 @register_function(torch.broadcast_tensors)
 def broadcast_tensors(*tensors):
     from hidet.ir.utils.broadcast_utils import broadcast_shapes
@@ -250,7 +231,7 @@ def log_metrics(mode, step, metrics):
     for metric in metrics:
         logging.info('%s %s at step %d: %f' % (mode, metric, step, metrics[metric]))
 
-# @TimeCounter.count_time()
+@TimeCounter.count_time()
 def evaluate(model, tp_answers, fn_answers, args, dataloader, query_name_dict, mode, step, writer):
     '''
     Evaluate queries in dataloader
@@ -450,7 +431,7 @@ def main(args):
         query_name_dict = query_name_dict
     )
 
-    inductor_model = torch.compile(model, backend="inductor")
+    # inductor_model = torch.compile(model, backend="inductor")
 
     # hidet.torch.dynamo_config.print_input_graph(True)
 
@@ -459,7 +440,7 @@ def main(args):
     # hidet.torch.dynamo_config.dump_graph_ir("graph_hidet/" + current_time + args.geo)
 
     # hidet.torch.dynamo_config.correctness_report()
-    hidet_model = torch.compile(model, backend="hidet")
+    model = torch.compile(model, backend="hidet")
 
     logging.info('Model Parameter Configuration:')
     num_params = 0
@@ -471,8 +452,8 @@ def main(args):
 
     if args.cuda:
         model = model.cuda()
-        inductor_model = inductor_model.cuda()
-        hidet_model = hidet_model.cuda()
+        # inductor_model = inductor_model.cuda()
+        # hidet_model = hidet_model.cuda()
     
     if args.do_train:
         current_learning_rate = args.learning_rate
@@ -578,10 +559,10 @@ def main(args):
     if args.do_test:
         logging.info('Evaluating on Test Dataset...')
         # warmup
-        # for _ in range(5):
-        #     # _ = evaluate(model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)    
-        #     # _ = evaluate(inductor_model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)
-        #     _ = evaluate(hidet_model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)
+        for _ in range(20):
+            _ = evaluate(model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)    
+            # _ = evaluate(inductor_model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)
+            # _ = evaluate(hidet_model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)
 
         # with torch.autograd.profiler.profile(enabled=True) as prof:
             # test_all_metrics = evaluate(model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)
@@ -591,10 +572,9 @@ def main(args):
         # with torch.autograd.profiler.profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA], record_shapes=True) as prof:
         # with torch.autograd.profiler.profile(enabled=True) as prof:
         # torch.cuda.memory._record_memory_history()
-       
         # test_all_metrics = evaluate(model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)    
         # test_all_metrics = evaluate(inductor_model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)    
-        test_all_metrics = evaluate(hidet_model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)    
+        # test_all_metrics = evaluate(hidet_model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)    
        
         # torch.cuda.memory._dump_snapshot("my_snapshot.pickle")
         # print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=10))
