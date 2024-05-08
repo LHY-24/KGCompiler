@@ -11,18 +11,21 @@ import os
 
 import numpy as np
 import torch
+import torch.profiler
 from torch.utils.data import DataLoader
+from torch.autograd.profiler import record_function
 from models import KGReasoning
 from dataloader import TestDataset, TrainDataset, SingledirectionalOneShotIterator
 from tensorboardX import SummaryWriter
-import torch.profiler
 import pickle
 from collections import defaultdict
 from tqdm import tqdm
 from util import flatten_query, list2tuple, parse_time, set_global_seed, eval_tuple
 from typing import Optional, Union, Sequence, Any, Tuple, List
 import functools
-import timeit
+import socket
+import datetime
+from datetime import datetime
 import sys
 sys.path.append("..")
 from utils.TimeCounter import TimeCounter
@@ -51,9 +54,6 @@ from hidet.ir.dtypes import promote_type
 from hidet.graph import ops
 from hidet.graph.frontend.torch.register_functions import register_function
 from hidet.graph.frontend.torch.register_methods import register_method
-
-import sys
-sys.path.append("..")
 
 @register_function(torch.nn.functional.Tensor)
 def torch_tensor(x):
@@ -102,13 +102,6 @@ def get_broadcast_shape(x: Tensor, y: Tensor):
         assert x_shape_i == 1 or y_shape_i == 1
         broadcase_shape.append(x_shape_i if y_shape_i == 1 else y_shape_i)
     return list(reversed(broadcase_shape))
-
-@register_function(torch.broadcast_tensors)
-def broadcast_tensors(x: Tensor, y: Tensor):
-    broadcast_tensors = get_broadcast_shape(x, y)
-    a = ops.broadcast(x, broadcast_tensors)
-    b = ops.broadcast(y, broadcast_tensors)
-    return a, b
 
 @register_function(torch.broadcast_tensors)
 def broadcast_tensors(*tensors):
@@ -200,6 +193,7 @@ def parse_args(args=None):
     parser.add_argument('--prefix', default=None, type=str, help='prefix of the log path')
     parser.add_argument('--checkpoint_path', default=None, type=str, help='path for loading the checkpoints')
     parser.add_argument('-evu', '--evaluate_union', default="DNF", type=str, choices=['DNF', 'DM'], help='the way to evaluate union queries, transform it to disjunctive normal form (DNF) or use the De Morgan\'s laws (DM)')
+    parser.add_argument("-c", "--compile", default="eager", type=str, choices=["hidet", "inductor", "eager"], help="torch backend")
 
     return parser.parse_args(args)
 
@@ -250,6 +244,8 @@ def log_metrics(mode, step, metrics):
     for metric in metrics:
         logging.info('%s %s at step %d: %f' % (mode, metric, step, metrics[metric]))
 
+
+from utils.perf_time import TimeClock
 # @TimeCounter.count_time()
 def evaluate(model, tp_answers, fn_answers, args, dataloader, query_name_dict, mode, step, writer):
     '''
@@ -258,10 +254,10 @@ def evaluate(model, tp_answers, fn_answers, args, dataloader, query_name_dict, m
     average_metrics = defaultdict(float)
     all_metrics = defaultdict(float)
 
-    # time_counter1 = TimeCounter.profile_time('time_counter1')
-    # time_counter1.__enter__()
+    time_counter1 = TimeCounter.profile_time('time_counter1', warmup_interval=3)
+    time_counter1.__enter__()
     metrics = model.test_step(model, tp_answers, fn_answers, args, dataloader, query_name_dict)
-    # time_counter1.__exit__(None, None, None)
+    time_counter1.__exit__(None, None, None)
     
     num_query_structures = 0
     num_queries = 0
@@ -450,16 +446,18 @@ def main(args):
         query_name_dict = query_name_dict
     )
 
-    inductor_model = torch.compile(model, backend="inductor")
-
-    # hidet.torch.dynamo_config.print_input_graph(True)
-
-    # import datetime
-    # current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    if args.compile == "eager":
+        model = model
+    elif args.compile == "inductor":
+        model = torch.compile(model, backend="inductor")
+    elif args.compile == "hidet":
+        model = torch.compile(model, backend="hidet")
+    # current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
     # hidet.torch.dynamo_config.dump_graph_ir("graph_hidet/" + current_time + args.geo)
-
     # hidet.torch.dynamo_config.correctness_report()
-    hidet_model = torch.compile(model, backend="hidet")
+    # hidet.torch.dynamo_config.print_input_graph(True)
+    # hidet.torch.dynamo_config.search_space(2)
+    # hidet_model = torch.compile(model, backend="hidet")
 
     logging.info('Model Parameter Configuration:')
     num_params = 0
@@ -471,8 +469,8 @@ def main(args):
 
     if args.cuda:
         model = model.cuda()
-        inductor_model = inductor_model.cuda()
-        hidet_model = hidet_model.cuda()
+        # inductor_model = inductor_model.cuda()
+        # hidet_model = hidet_model.cuda()
     
     if args.do_train:
         current_learning_rate = args.learning_rate
@@ -578,28 +576,65 @@ def main(args):
     if args.do_test:
         logging.info('Evaluating on Test Dataset...')
         # warmup
-        # for _ in range(5):
-        #     # _ = evaluate(model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)    
-        #     # _ = evaluate(inductor_model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)
-        #     _ = evaluate(hidet_model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)
+        # for _ in range(50):
+            # _ = evaluate(model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)    
+            # _ = evaluate(inductor_model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)
+            # _ = evaluate(hidet_model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)
 
-        # with torch.autograd.profiler.profile(enabled=True) as prof:
-            # test_all_metrics = evaluate(model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)
-        # print(prof.key_averages().table(sort_by="self_cpu_time_total"))
-        
         # from torch.profiler import profile, record_function, ProfilerActivity
         # with torch.autograd.profiler.profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA], record_shapes=True) as prof:
         # with torch.autograd.profiler.profile(enabled=True) as prof:
         # torch.cuda.memory._record_memory_history()
        
         # test_all_metrics = evaluate(model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)    
-        # test_all_metrics = evaluate(inductor_model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)    
-        test_all_metrics = evaluate(hidet_model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)    
+
+
+        for _ in range(6):
+            test_all_metrics = evaluate(model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)    
+        # test_all_metrics = evaluate(hidet_model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)    
        
         # torch.cuda.memory._dump_snapshot("my_snapshot.pickle")
         # print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=10))
 
-        
+
+        # logging.basicConfig(
+        #     format="%(levelname)s:%(asctime)s %(message)s",
+        #     level=logging.INFO,
+        #     datefmt="%Y-%m-%d %H:%M:%S",
+        # )
+        # logger: logging.Logger = logging.getLogger(__name__)
+        # logger.setLevel(level=logging.INFO)
+        # TIME_FORMAT_STR: str = "%b_%d_%H_%M_%S"
+
+        # def trace_handler(prof: torch.profiler.profile):
+        #     # Prefix for file names.
+        #     host_name = socket.gethostname()
+        #     timestamp = datetime.now().strftime(TIME_FORMAT_STR)
+        #     file_prefix = f"{host_name}_{timestamp}"
+        #     # Construct the trace file.
+        #     prof.export_chrome_trace(f"{file_prefix}.json.gz")
+        #     # Construct the memory timeline file.
+        #     prof.export_memory_timeline(f"{file_prefix}.html", device="cuda:0")
+
+        # with torch.profiler.profile(
+        #     activities=[
+        #         torch.profiler.ProfilerActivity.CPU,
+        #         torch.profiler.ProfilerActivity.CUDA,
+        #     ],
+        #     schedule=torch.profiler.schedule(wait=0, warmup=0, active=6, repeat=1),
+        #     record_shapes=True,
+        #     profile_memory=True,
+        #     with_stack=True,
+        #     on_trace_ready=trace_handler,
+        # ) as prof:
+        #     for _ in range(2):
+        #         prof.step()
+        #         with record_function("## forward ##"):
+        #             # test_all_metrics = evaluate(model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)    
+        #             test_all_metrics = evaluate(inductor_model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)    
+        #             # test_all_metrics = evaluate(hidet_model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)    
+       
+
     logging.info("Training finished!!")
 
 

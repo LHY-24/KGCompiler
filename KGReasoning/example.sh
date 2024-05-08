@@ -67,20 +67,37 @@ CUDA_VISIBLE_DEVICES=0 python main.py --cuda --do_test \
   --data_path data/FB15k-237-betae -n 128 -b 512 -d 400 -g 24 \
   --geo box  -boxm "(none,0.02)" --tasks "1p"
 
+TORCH_COMPILE_DEBUG=1 CUDA_VISIBLE_DEVICES=0 python main.py --cuda --do_test \
+  --data_path data/FB15k-237-betae -n 128 -b 512 -d 400 -g 24 \
+  --geo box  -boxm "(none,0.02)" --tasks "1p"
+
 CUDA_VISIBLE_DEVICES=0 python main.py --cuda --do_test \
   --data_path data/FB15k-237-betae -n 128 -b 512 -d 400 -g 24 \
   --geo box  -boxm "(none,0.02)" --tasks "1p.2p.3p.2i.3i.ip.pi.2u.up"
+
+CUDA_VISIBLE_DEVICES=0 python main.py --cuda --do_test \
+  --data_path data/FB15k-237-betae -n 128 -b 512 -d 400 -g 24 \
+  --geo box  -boxm "(none,0.02)" --tasks "1p.2p.3p.2i.3i.ip.pi.2u.up" \
+  --test_batch_size 10
+
 
 # GQE
 CUDA_VISIBLE_DEVICES=0 python main.py --cuda --do_test \
   --data_path data/FB15k-237-betae -n 128 -b 512 -d 800 -g 24 \
   --geo vec --tasks "1p.2p.3p.2i.3i.ip.pi.2u.up"
 
+CUDA_VISIBLE_DEVICES=0 python main.py --cuda --do_test \
+  --data_path data/FB15k-betae -n 128 -b 512 -d 800 -g 24 \
+  --geo vec --tasks "1p" \
+  --test_batch_size 1
 
-# TORCH_COMPILE_DEBUG=1
 
 # BETAE
 CUDA_VISIBLE_DEVICES=0 python main.py --cuda --do_test \
   --data_path data/FB15k-237-betae -n 128 -b 512 -d 400 -g 60 \
   --geo beta -betam "(1600,2)"
 
+CUDA_VISIBLE_DEVICES=0 python main.py --cuda --do_test \
+  --data_path data/FB15k-237-betae -n 128 -b 512 -d 400 -g 60 \
+  --geo beta -betam "(1600,2)" \
+  --test_batch_size 10

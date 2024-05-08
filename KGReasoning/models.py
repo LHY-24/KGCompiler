@@ -640,12 +640,6 @@ class KGReasoning(nn.Module):
                 if args.cuda:
                     negative_sample = negative_sample.cuda()
 
-                # with open("output.txt", 'a') as f:
-                #     print("negative_sample, shape=", negative_sample.shape, negative_sample, file=f)
-                #     print("batch_queries_dict", batch_queries_dict, file=f)
-                #     print("batch_idxs_dict", batch_idxs_dict, file=f)
-                #     print("*"*99, file=f)
-                # exit()
                 _, negative_logit, _, idxs = model(None, negative_sample, None, batch_queries_dict, batch_idxs_dict)
 
                 queries_unflatten = [queries_unflatten[i] for i in idxs]
