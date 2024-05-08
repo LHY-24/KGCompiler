@@ -585,7 +585,6 @@ def main(args):
         # with torch.autograd.profiler.profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA], record_shapes=True) as prof:
         # with torch.autograd.profiler.profile(enabled=True) as prof:
         # torch.cuda.memory._record_memory_history()
-       
         # test_all_metrics = evaluate(model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)    
 
 
