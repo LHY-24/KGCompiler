@@ -341,9 +341,15 @@ def test_getitem():
     # y_hidet = ops.take(x_hidet, hidet.asarray(idx))
     # print("y_hidet: ", y_hidet)
 
+def test_torch_method_lgamma():
+    def func(x: torch.Tensor):
+        x.lgamma()
+    func = torch.compile(func, backend="hidet")
+    x = torch.rand([3, 3])
+    func(x)
 
 def main():
-    test_getitem()
+    test_torch_method_lgamma()
 
 if __name__ == "__main__":
     main()

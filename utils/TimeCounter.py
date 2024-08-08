@@ -1,9 +1,9 @@
 import time
 import warnings
 from contextlib import contextmanager
-
+import os
 import torch
-
+import pandas as pd
 
 class TimeCounter:
     names = dict()
@@ -44,8 +44,9 @@ class TimeCounter:
 
                 if with_sync and torch.cuda.is_available():
                     torch.cuda.synchronize()
-
-                elapsed = time.perf_counter() - start_time
+                end_time = time.perf_counter()
+                
+                elapsed = end_time - start_time
 
                 if count >= warmup_interval:
                     pure_inf_time += elapsed
@@ -69,12 +70,15 @@ class TimeCounter:
     @contextmanager
     def profile_time(cls,
                      func_name,
+                     filepath,
                      log_interval=1,
-                     warmup_interval=1,
-                     with_sync=True):
-        assert warmup_interval >= 1
-        warnings.warn('func_name must be globally unique if you call '
-                      'profile_time multiple times')
+                     warmup_interval=0,
+                     with_sync=True,
+                     overwrite = True
+                     ):
+        assert warmup_interval >= 0
+        # warnings.warn('func_name must be globally unique if you call '
+        #               'profile_time multiple times')
 
         if func_name in cls.names:
             count = cls.names[func_name]['count']
@@ -82,15 +86,30 @@ class TimeCounter:
             log_interval = cls.names[func_name]['log_interval']
             warmup_interval = cls.names[func_name]['warmup_interval']
             with_sync = cls.names[func_name]['with_sync']
+            filename = cls.names[func_name]['filename']
         else:
             count = 0
             pure_inf_time = 0
+            # csv
+            filename = os.path.join(filepath, func_name+".csv")
+            # handle overwrite
+            if os.path.exists(filename) and overwrite:
+                with open(filename, "w") as f:
+                    print("", end="", file=f)
+            # mkdir if dir not exist
+            if not os.path.exists(filepath):
+                os.makedirs(filepath)
+            # head of csv
+            with open(filename, "a") as f:
+                print("round_num, single_round/ms, rounds_average/ms", file=f)
+                
             cls.names[func_name] = dict(
                 count=count,
                 pure_inf_time=pure_inf_time,
                 log_interval=log_interval,
                 warmup_interval=warmup_interval,
-                with_sync=with_sync)
+                with_sync=with_sync,
+                filename = filename)
 
         count += 1
         cls.names[func_name]['count'] = count
@@ -104,15 +123,27 @@ class TimeCounter:
         if with_sync and torch.cuda.is_available():
             torch.cuda.synchronize()
         elapsed = time.perf_counter() - start_time
+        
+        # output "round_num" and "single_round"
+        with open(filename, "a") as f:
+            print("%d, %.4f,"%(count, elapsed * 1000), file=f, end="")
 
-        if count >= warmup_interval:
+        if count > warmup_interval:
+            # calc total time (exclude warmup intervals)
             pure_inf_time += elapsed
             cls.names[func_name]['pure_inf_time'] = pure_inf_time
 
-            if count % log_interval == 0:
-                times_per_count = 1000 * pure_inf_time / (
-                    count - warmup_interval + 1)
-                print(
-                    f'[{func_name}]-{count} times per count: '
-                    f'{times_per_count:.1f} ms',
-                    flush=True)
+            # if count % log_interval == 0:
+
+            # calc average time (exclude warmup intervals)
+            times_per_count = 1000 * pure_inf_time / (
+                count - warmup_interval)
+            # output "rounds_average"
+            with open(filename, "a") as f:
+                print("%.4f"%(times_per_count), file=f, end="")
+        else:
+            with open(filename, "a") as f:
+                print("warmup", file=f, end="")
+        # output tail of line: '\n'
+        with open(filename, "a") as f:
+            print(file=f)

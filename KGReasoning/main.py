@@ -21,19 +21,19 @@ import pickle
 from collections import defaultdict
 from tqdm import tqdm
 from util import flatten_query, list2tuple, parse_time, set_global_seed, eval_tuple
-from typing import Optional, Union, Sequence, Any, Tuple, List
+from typing import Optional, Union, Sequence, Any, Tuple, List, Dict
 import functools
 import socket
 import datetime
 from datetime import datetime
 import sys
-sys.path.append("..")
-from utils.TimeCounter import TimeCounter
+
+from utils import TimeCounter
 
 
 # Print Fx Graph in Torch Dynamo
-from torch._dynamo import optimize
-from torch._inductor import graph
+# from torch._dynamo import optimize
+# from torch._inductor import graph
 # class CustomGraphLowering(graph.GraphLowering):
 #     def __init__(
 #         self,
@@ -46,90 +46,16 @@ from torch._inductor import graph
 #         gm.graph.print_tabular()
 # graph.GraphLowering = CustomGraphLowering
 
+# Generate forward.svg
+# from torch.fx.passes.graph_drawer import FxGraphDrawer
+# def inspect_backend(gm, sample_inputs):
+#     # code = gm.print_readable()
+#     gm.graph.print_tabular()
+#     with open("forward.svg", "wb") as file:
+#         file.write(FxGraphDrawer(gm,'f').get_dot_graph().create_svg())
+#     return gm.forward
 
-# Regist Operator in Hidet
 import hidet
-from hidet import Tensor
-from hidet.ir.dtypes import promote_type
-from hidet.graph import ops
-from hidet.graph.frontend.torch.register_functions import register_function
-from hidet.graph.frontend.torch.register_methods import register_method
-
-@register_function(torch.nn.functional.Tensor)
-def torch_tensor(x):
-    return hidet.asarray(x)
-
-from utils.hidet_norm import kg_norm
-@register_function(torch.norm)
-def torch_norm(x, p=2, dim=1):
-    return kg_norm(x, p, dim)
-
-@register_function(torch.index_select)
-def torch_index_select(input, dim, index):
-    return ops.transform.take(input, index, axis=dim)
-
-@register_method(torch.Tensor.abs)
-def torch_Tensor_abs(self):
-    return ops.abs(self)
-
-@register_function(torch.cat)
-def cat(tensors: List[Tensor], dim: int):
-    dtype = functools.reduce(promote_type, [t.dtype for t in tensors])
-    tensors = [ops.cast(t, dtype) for t in tensors]
-
-    for tensor in tensors:
-        if tensor.shape[0] == 0:
-            tensors.remove(tensor)
-            
-    return ops.concat(tensors, dim)
-
-@register_method(torch.Tensor.reshape)
-def tensor_reshape_method(self: Tensor, shape) -> Tensor:
-    return ops.reshape(self, shape)
-
-@register_function(torch.reshape)
-def tensor_reshape_function(self: Tensor, shape) -> Tensor:
-    return ops.reshape(self, shape)
-
-def get_broadcast_shape(x: Tensor, y: Tensor):
-    broadcase_shape = []
-    x_shape = x.shape
-    y_shape = y.shape
-    dim = max(len(x_shape), len(y_shape))
-    for i in reversed(range(dim)):
-        x_shape_i = 1 if i > len(x_shape)-1 else x_shape[i]
-        y_shape_i = 1 if i > len(y_shape)-1 else y_shape[i]
-        assert x_shape_i == 1 or y_shape_i == 1
-        broadcase_shape.append(x_shape_i if y_shape_i == 1 else y_shape_i)
-    return list(reversed(broadcase_shape))
-
-@register_function(torch.broadcast_tensors)
-def broadcast_tensors(*tensors):
-    from hidet.ir.utils.broadcast_utils import broadcast_shapes
-    shape_list = []
-    for t in tensors:
-        shape_list.append(t.shape)
-    b_shape = broadcast_shapes(shape_list)
-    new_tensors = []
-    for t in tensors:
-        new_tensors.append(ops.broadcast(t, b_shape))
-    return new_tensors
-
-from utils.hidet_digamma import digamma
-@register_function(torch.digamma)
-def torch_digamma(x):
-    return digamma(x)
-
-from utils.hidet_gamma import lgamma
-@register_method(torch.Tensor.lgamma)
-def torch_lgamma(self: Tensor) -> Tensor:
-    return lgamma(self)
-
-@register_function(torch._assert_async)
-def torch_assert_async(x, assert_msg):
-    return None
-
-
 
 query_name_dict = {('e',('r',)): '1p', 
                     ('e', ('r', 'r')): '2p',
@@ -150,6 +76,7 @@ query_name_dict = {('e',('r',)): '1p',
                 }
 name_query_dict = {value: key for key, value in query_name_dict.items()}
 all_tasks = list(name_query_dict.keys()) # ['1p', '2p', '3p', '2i', '3i', 'ip', 'pi', '2in', '3in', 'inp', 'pin', 'pni', '2u-DNF', '2u-DM', 'up-DNF', 'up-DM']
+
 
 def parse_args(args=None):
     parser = argparse.ArgumentParser(
@@ -193,9 +120,11 @@ def parse_args(args=None):
     parser.add_argument('--prefix', default=None, type=str, help='prefix of the log path')
     parser.add_argument('--checkpoint_path', default=None, type=str, help='path for loading the checkpoints')
     parser.add_argument('-evu', '--evaluate_union', default="DNF", type=str, choices=['DNF', 'DM'], help='the way to evaluate union queries, transform it to disjunctive normal form (DNF) or use the De Morgan\'s laws (DM)')
-    parser.add_argument("-c", "--compile", default="eager", type=str, choices=["hidet", "inductor", "eager"], help="torch backend")
+    parser.add_argument("-c", "--compile", default="eager", type=str, choices=["hidet", "inductor", "eager"], help="torch compile backend")
+    parser.add_argument("-to", "--timer_output", default="timer_output", type=str, help="timer output dir")
 
     return parser.parse_args(args)
+
 
 def save_model(model, optimizer, save_variable_list, args):
     '''
@@ -213,6 +142,7 @@ def save_model(model, optimizer, save_variable_list, args):
         'optimizer_state_dict': optimizer.state_dict()},
         os.path.join(args.save_path, 'checkpoint')
     )
+
 
 def set_logger(args):
     '''
@@ -237,6 +167,7 @@ def set_logger(args):
         console.setFormatter(formatter)
         logging.getLogger('').addHandler(console)
 
+
 def log_metrics(mode, step, metrics):
     '''
     Print the evaluation logs
@@ -245,18 +176,18 @@ def log_metrics(mode, step, metrics):
         logging.info('%s %s at step %d: %f' % (mode, metric, step, metrics[metric]))
 
 
-from utils.perf_time import TimeClock
 # @TimeCounter.count_time()
-def evaluate(model, tp_answers, fn_answers, args, dataloader, query_name_dict, mode, step, writer):
+def evaluate(model, tp_answers, fn_answers, args, dataloader, query_name_dict, mode, step, writer, counter_printer_hint: Dict):
     '''
     Evaluate queries in dataloader
     '''
     average_metrics = defaultdict(float)
     all_metrics = defaultdict(float)
-
-    time_counter1 = TimeCounter.profile_time('time_counter1', warmup_interval=3)
+    
+    print("dataset len: ", len(dataloader))
+    time_counter1 = TimeCounter.profile_time('Evalute', counter_printer_hint["timer_output_dir"])
     time_counter1.__enter__()
-    metrics = model.test_step(model, tp_answers, fn_answers, args, dataloader, query_name_dict)
+    metrics = model.test_step(model, tp_answers, fn_answers, args, dataloader, query_name_dict, counter_printer_hint)
     time_counter1.__exit__(None, None, None)
     
     num_query_structures = 0
@@ -278,7 +209,8 @@ def evaluate(model, tp_answers, fn_answers, args, dataloader, query_name_dict, m
     log_metrics('%s average'%mode, step, average_metrics)
 
     return all_metrics
-        
+    
+
 def load_data(args, tasks):
     '''
     Load queries and remove queries not in tasks
@@ -309,6 +241,7 @@ def load_data(args, tasks):
                 del test_queries[query_structure]
 
     return train_queries, train_answers, valid_queries, valid_hard_answers, valid_easy_answers, test_queries, test_hard_answers, test_easy_answers
+
 
 def main(args):
     set_global_seed(args.seed)
@@ -399,7 +332,6 @@ def main(args):
         else:
             train_other_iterator = None
     
-    
     logging.info("Validation info:")
     if args.do_valid:
         for query_structure in valid_queries:
@@ -415,7 +347,6 @@ def main(args):
             num_workers=args.cpu_num, 
             collate_fn=TestDataset.collate_fn
         )
-
 
     logging.info("Test info:")
     if args.do_test:
@@ -450,14 +381,17 @@ def main(args):
         model = model
     elif args.compile == "inductor":
         model = torch.compile(model, backend="inductor")
+        # torch._dynamo.reset()
+        # model = torch.compile(model, backend=inspect_backend)
     elif args.compile == "hidet":
+        # clear_registered_rewrite_rules()
+        # current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
+        # hidet.torch.dynamo_config.dump_graph_ir("graph_hidet/" + current_time + args.geo + args.tasks)
+        # hidet.torch.dynamo_config.correctness_report()
+        # hidet.torch.dynamo_config.print_input_graph(True)
+        hidet.torch.dynamo_config.search_space(2)
+        # print("Cache Directory:", hidet.option.get_cache_dir())
         model = torch.compile(model, backend="hidet")
-    # current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
-    # hidet.torch.dynamo_config.dump_graph_ir("graph_hidet/" + current_time + args.geo)
-    # hidet.torch.dynamo_config.correctness_report()
-    # hidet.torch.dynamo_config.print_input_graph(True)
-    # hidet.torch.dynamo_config.search_space(2)
-    # hidet_model = torch.compile(model, backend="hidet")
 
     logging.info('Model Parameter Configuration:')
     num_params = 0
@@ -469,8 +403,6 @@ def main(args):
 
     if args.cuda:
         model = model.cuda()
-        # inductor_model = inductor_model.cuda()
-        # hidet_model = hidet_model.cuda()
     
     if args.do_train:
         current_learning_rate = args.learning_rate
@@ -575,23 +507,36 @@ def main(args):
 
     if args.do_test:
         logging.info('Evaluating on Test Dataset...')
-        # warmup
-        # for _ in range(50):
-            # _ = evaluate(model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)    
-            # _ = evaluate(inductor_model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)
-            # _ = evaluate(hidet_model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)
-
+        for i in range(2):
+            # info for print
+            timer_output_dir = os.path.join(
+                args.timer_output,
+                args.geo,
+                args.data_path.split('/')[-1],
+                args.tasks,
+                str(args.test_batch_size),
+                args.compile)
+            counter_printer_hint = dict(
+                epo=i,
+                timer_output_dir = timer_output_dir
+            )
+            evaluate(model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer, counter_printer_hint)
+        
         # from torch.profiler import profile, record_function, ProfilerActivity
         # with torch.autograd.profiler.profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA], record_shapes=True) as prof:
         # with torch.autograd.profiler.profile(enabled=True) as prof:
         # torch.cuda.memory._record_memory_history()
-        # test_all_metrics = evaluate(model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)    
 
-
-        for _ in range(6):
-            test_all_metrics = evaluate(model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)    
-        # test_all_metrics = evaluate(hidet_model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)    
-       
+        # test_all_metrics = evaluate(model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer) 
+        
+        # for i in range(8):
+        #     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S") 
+        #     print("[current time-{}]-{}, start evaluating".format(i + 1, now_str))
+        #     # test_all_metrics = evaluate(model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)    
+        #     test_all_metrics = evaluate(model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)    
+        #     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S") 
+        #     print("[current time-{}]-{}, evaluating finished".format(i + 1, now_str))
+        #     print("*" * 30)
         # torch.cuda.memory._dump_snapshot("my_snapshot.pickle")
         # print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=10))
 
@@ -630,10 +575,7 @@ def main(args):
         #         prof.step()
         #         with record_function("## forward ##"):
         #             # test_all_metrics = evaluate(model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)    
-        #             test_all_metrics = evaluate(inductor_model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)    
-        #             # test_all_metrics = evaluate(hidet_model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)    
-       
-
+  
     logging.info("Training finished!!")
 
 

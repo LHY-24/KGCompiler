@@ -20,6 +20,11 @@ import time
 from tqdm import tqdm
 import os
 
+import sys
+sys.path.append("..")
+from utils.TimeCounter import TimeCounter
+
+
 def Identity(x):
     return x
 
@@ -512,55 +517,55 @@ class KGReasoning(nn.Module):
                 all_center_embeddings.append(center_embedding)
                 all_idxs.extend(batch_idxs_dict[query_structure])
 
-        if len(all_center_embeddings) > 0:
-            all_center_embeddings = torch.cat(all_center_embeddings, dim=0).unsqueeze(1)
-        if len(all_union_center_embeddings) > 0:
-            all_union_center_embeddings = torch.cat(all_union_center_embeddings, dim=0).unsqueeze(1)
-            all_union_center_embeddings = all_union_center_embeddings.view(all_union_center_embeddings.shape[0]//2, 2, 1, -1)
+        # if len(all_center_embeddings) > 0:
+        #     all_center_embeddings = torch.cat(all_center_embeddings, dim=0).unsqueeze(1)
+        # if len(all_union_center_embeddings) > 0:
+        #     all_union_center_embeddings = torch.cat(all_union_center_embeddings, dim=0).unsqueeze(1)
+        #     all_union_center_embeddings = all_union_center_embeddings.view(all_union_center_embeddings.shape[0]//2, 2, 1, -1)
 
-        if type(subsampling_weight) != type(None):
-            subsampling_weight = subsampling_weight[all_idxs+all_union_idxs]
+        # if type(subsampling_weight) != type(None):
+        #     subsampling_weight = subsampling_weight[all_idxs+all_union_idxs]
 
-        if type(positive_sample) != type(None):
-            if len(all_center_embeddings) > 0:
-                positive_sample_regular = positive_sample[all_idxs]
-                positive_embedding = torch.index_select(self.entity_embedding, dim=0, index=positive_sample_regular).unsqueeze(1)
-                positive_logit = self.cal_logit_vec(positive_embedding, all_center_embeddings)
-            else:
-                positive_logit = torch.Tensor([]).to(self.entity_embedding.device)
+        # if type(positive_sample) != type(None):
+        #     if len(all_center_embeddings) > 0:
+        #         positive_sample_regular = positive_sample[all_idxs]
+        #         positive_embedding = torch.index_select(self.entity_embedding, dim=0, index=positive_sample_regular).unsqueeze(1)
+        #         positive_logit = self.cal_logit_vec(positive_embedding, all_center_embeddings)
+        #     else:
+        #         positive_logit = torch.Tensor([]).to(self.entity_embedding.device)
 
-            if len(all_union_center_embeddings) > 0:
-                positive_sample_union = positive_sample[all_union_idxs]
-                positive_embedding = torch.index_select(self.entity_embedding, dim=0, index=positive_sample_union).unsqueeze(1).unsqueeze(1)
-                positive_union_logit = self.cal_logit_vec(positive_embedding, all_union_center_embeddings)
-                positive_union_logit = torch.max(positive_union_logit, dim=1)[0]
-            else:
-                positive_union_logit = torch.Tensor([]).to(self.entity_embedding.device)
-            positive_logit = torch.cat([positive_logit, positive_union_logit], dim=0)
-        else:
-            positive_logit = None
+        #     if len(all_union_center_embeddings) > 0:
+        #         positive_sample_union = positive_sample[all_union_idxs]
+        #         positive_embedding = torch.index_select(self.entity_embedding, dim=0, index=positive_sample_union).unsqueeze(1).unsqueeze(1)
+        #         positive_union_logit = self.cal_logit_vec(positive_embedding, all_union_center_embeddings)
+        #         positive_union_logit = torch.max(positive_union_logit, dim=1)[0]
+        #     else:
+        #         positive_union_logit = torch.Tensor([]).to(self.entity_embedding.device)
+        #     positive_logit = torch.cat([positive_logit, positive_union_logit], dim=0)
+        # else:
+        #     positive_logit = None
 
-        if type(negative_sample) != type(None):
-            if len(all_center_embeddings) > 0:
-                negative_sample_regular = negative_sample[all_idxs]
-                batch_size, negative_size = negative_sample_regular.shape
-                negative_embedding = torch.index_select(self.entity_embedding, dim=0, index=negative_sample_regular.view(-1)).view(batch_size, negative_size, -1)
-                negative_logit = self.cal_logit_vec(negative_embedding, all_center_embeddings)
-            else:
-                negative_logit = torch.Tensor([]).to(self.entity_embedding.device)
+        # if type(negative_sample) != type(None):
+        #     if len(all_center_embeddings) > 0:
+        #         negative_sample_regular = negative_sample[all_idxs]
+        #         batch_size, negative_size = negative_sample_regular.shape
+        #         negative_embedding = torch.index_select(self.entity_embedding, dim=0, index=negative_sample_regular.view(-1)).view(batch_size, negative_size, -1)
+        #         negative_logit = self.cal_logit_vec(negative_embedding, all_center_embeddings)
+        #     else:
+        #         negative_logit = torch.Tensor([]).to(self.entity_embedding.device)
 
-            if len(all_union_center_embeddings) > 0:
-                negative_sample_union = negative_sample[all_union_idxs]
-                batch_size, negative_size = negative_sample_union.shape
-                negative_embedding = torch.index_select(self.entity_embedding, dim=0, index=negative_sample_union.view(-1)).view(batch_size, 1, negative_size, -1)
-                negative_union_logit = self.cal_logit_vec(negative_embedding, all_union_center_embeddings)
-                negative_union_logit = torch.max(negative_union_logit, dim=1)[0]
-            else:
-                negative_union_logit = torch.Tensor([]).to(self.entity_embedding.device)
-            negative_logit = torch.cat([negative_logit, negative_union_logit], dim=0)
-        else:
-            negative_logit = None
-
+        #     if len(all_union_center_embeddings) > 0:
+        #         negative_sample_union = negative_sample[all_union_idxs]
+        #         batch_size, negative_size = negative_sample_union.shape
+        #         negative_embedding = torch.index_select(self.entity_embedding, dim=0, index=negative_sample_union.view(-1)).view(batch_size, 1, negative_size, -1)
+        #         negative_union_logit = self.cal_logit_vec(negative_embedding, all_union_center_embeddings)
+        #         negative_union_logit = torch.max(negative_union_logit, dim=1)[0]
+        #     else:
+        #         negative_union_logit = torch.Tensor([]).to(self.entity_embedding.device)
+        #     negative_logit = torch.cat([negative_logit, negative_union_logit], dim=0)
+        # else:
+        #     negative_logit = None
+        positive_logit = negative_logit = None
         return positive_logit, negative_logit, subsampling_weight, all_idxs+all_union_idxs
 
     @staticmethod
@@ -604,29 +609,20 @@ class KGReasoning(nn.Module):
         return log
 
     @staticmethod
-    def test_step(model, easy_answers, hard_answers, args, test_dataloader, query_name_dict, save_result=False, save_str="", save_empty=False):
+    def test_step(model, easy_answers, hard_answers, args, test_dataloader, query_name_dict, counter_printer_hint, save_result=False, save_str="", save_empty=False):
         model.eval()
 
         step = 0
         total_steps = len(test_dataloader)
         logs = collections.defaultdict(list)
 
-        # with torch.profiler.profile(
-        #     activities=[
-        #     torch.profiler.ProfilerActivity.CPU,
-        #     torch.profiler.ProfilerActivity.CUDA],
-        #     schedule=torch.profiler.schedule(
-        #     wait=1,
-        #     warmup=1,
-        #     active=100
-        #     ),
-        # on_trace_ready=torch.profiler.tensorboard_trace_handler('./result', worker_name='inductor-1p.2p.3p.2i.3i.ip.pi.2u.up'),
-        # # record_shapes=True,
-        # profile_memory=True,  # This will take 1 to 2 minutes. Setting it to False could greatly speedup.
-        # # with_stack=True
-        # ) as p:
+        # print("dataset len: ", len(test_dataloader))
+        
         with torch.no_grad():
             for negative_sample, queries, queries_unflatten, query_structures in tqdm(test_dataloader, disable=not args.print_on_screen):
+                
+
+
                 batch_queries_dict = collections.defaultdict(list)
                 batch_idxs_dict = collections.defaultdict(list)
                 for i, query in enumerate(queries):
@@ -639,71 +635,74 @@ class KGReasoning(nn.Module):
                         batch_queries_dict[query_structure] = torch.LongTensor(batch_queries_dict[query_structure])
                 if args.cuda:
                     negative_sample = negative_sample.cuda()
-
-                _, negative_logit, _, idxs = model(None, negative_sample, None, batch_queries_dict, batch_idxs_dict)
-
-                queries_unflatten = [queries_unflatten[i] for i in idxs]
-                query_structures = [query_structures[i] for i in idxs]
-                argsort = torch.argsort(negative_logit, dim=1, descending=True)
-                ranking = argsort.clone().to(torch.float)
-                if len(argsort) == args.test_batch_size: # if it is the same shape with test_batch_size, we can reuse batch_entity_range without creating a new one
-                    ranking = ranking.scatter_(1, argsort, model.batch_entity_range) # achieve the ranking of all entities
-                else: # otherwise, create a new torch Tensor for batch_entity_range
-                    if args.cuda:
-                        ranking = ranking.scatter_(1, 
-                                                argsort, 
-                                                torch.arange(model.nentity).to(torch.float).repeat(argsort.shape[0], 
-                                                                                                    1).cuda()
-                                                ) # achieve the ranking of all entities
-                    else:
-                        ranking = ranking.scatter_(1, 
-                                                argsort, 
-                                                torch.arange(model.nentity).to(torch.float).repeat(argsort.shape[0], 
-                                                                                                    1)
-                                                ) # achieve the ranking of all entities
-                
-                for idx, (i, query, query_structure) in enumerate(zip(argsort[:, 0], queries_unflatten, query_structures)):
-                    hard_answer = hard_answers[query]
-                    easy_answer = easy_answers[query]
-                    num_hard = len(hard_answer)
-                    num_easy = len(easy_answer)
-                    assert len(hard_answer.intersection(easy_answer)) == 0
-                    cur_ranking = ranking[idx, list(easy_answer) + list(hard_answer)]
-                    cur_ranking, indices = torch.sort(cur_ranking)
-                    masks = indices >= num_easy
-                    if args.cuda:
-                        answer_list = torch.arange(num_hard + num_easy).to(torch.float).cuda()
-                    else:
-                        answer_list = torch.arange(num_hard + num_easy).to(torch.float)
-                    cur_ranking = cur_ranking - answer_list + 1 # filtered setting
-                    cur_ranking = cur_ranking[masks] # only take indices that belong to the hard answers
-
-                    mrr = torch.mean(1./cur_ranking).item()
-                    h1 = torch.mean((cur_ranking <= 1).to(torch.float)).item()
-                    h3 = torch.mean((cur_ranking <= 3).to(torch.float)).item()
-                    h10 = torch.mean((cur_ranking <= 10).to(torch.float)).item()
-
-                    logs[query_structure].append({
-                        'MRR': mrr,
-                        'HITS1': h1,
-                        'HITS3': h3,
-                        'HITS10': h10,
-                        'num_hard_answer': num_hard,
-                    })
-
-                if step % args.test_log_steps == 0:
-                    logging.info('Evaluating the model... (%d/%d)' % (step, total_steps))
-
-                step += 1
-                    # p.step()
                     
+                counter_name = "forward-" + str(counter_printer_hint["epo"])
+                timer_output_dir = counter_printer_hint["timer_output_dir"]
+                time_counter2 = TimeCounter.profile_time(counter_name, timer_output_dir)
+                time_counter2.__enter__()
+                _, negative_logit, _, idxs = model(None, negative_sample, None, batch_queries_dict, batch_idxs_dict)       # forward
+                time_counter2.__exit__(None, None, None)
+                # queries_unflatten = [queries_unflatten[i] for i in idxs]
+                # query_structures = [query_structures[i] for i in idxs]
+                # argsort = torch.argsort(negative_logit, dim=1, descending=True)
+                # ranking = argsort.clone().to(torch.float)
+                # if len(argsort) == args.test_batch_size: # if it is the same shape with test_batch_size, we can reuse batch_entity_range without creating a new one
+                #     ranking = ranking.scatter_(1, argsort, model.batch_entity_range) # achieve the ranking of all entities
+                # else: # otherwise, create a new torch Tensor for batch_entity_range
+                #     if args.cuda:
+                #         ranking = ranking.scatter_(1, 
+                #                                    argsort, 
+                #                                    torch.arange(model.nentity).to(torch.float).repeat(argsort.shape[0], 
+                #                                                                                       1).cuda()
+                #                                    ) # achieve the ranking of all entities
+                #     else:
+                #         ranking = ranking.scatter_(1, 
+                #                                    argsort, 
+                #                                    torch.arange(model.nentity).to(torch.float).repeat(argsort.shape[0], 
+                #                                                                                       1)
+                #                                    ) # achieve the ranking of all entities
+                
+                
+                # for idx, (i, query, query_structure) in enumerate(zip(argsort[:, 0], queries_unflatten, query_structures)):
+                #     hard_answer = hard_answers[query]
+                #     easy_answer = easy_answers[query]
+                #     num_hard = len(hard_answer)
+                #     num_easy = len(easy_answer)
+                #     assert len(hard_answer.intersection(easy_answer)) == 0
+                #     cur_ranking = ranking[idx, list(easy_answer) + list(hard_answer)]
+                #     cur_ranking, indices = torch.sort(cur_ranking)
+                #     masks = indices >= num_easy
+                #     if args.cuda:
+                #         answer_list = torch.arange(num_hard + num_easy).to(torch.float).cuda()
+                #     else:
+                #         answer_list = torch.arange(num_hard + num_easy).to(torch.float)
+                #     cur_ranking = cur_ranking - answer_list + 1 # filtered setting
+                #     cur_ranking = cur_ranking[masks] # only take indices that belong to the hard answers
+
+                #     mrr = torch.mean(1./cur_ranking).item()
+                #     h1 = torch.mean((cur_ranking <= 1).to(torch.float)).item()
+                #     h3 = torch.mean((cur_ranking <= 3).to(torch.float)).item()
+                #     h10 = torch.mean((cur_ranking <= 10).to(torch.float)).item()
+
+                #     logs[query_structure].append({
+                #         'MRR': mrr,
+                #         'HITS1': h1,
+                #         'HITS3': h3,
+                #         'HITS10': h10,
+                #         'num_hard_answer': num_hard,
+                #     })
+
+                # if step % args.test_log_steps == 0:
+                #     logging.info('Evaluating the model... (%d/%d)' % (step, total_steps))
+
+                # step += 1
 
         metrics = collections.defaultdict(lambda: collections.defaultdict(int))
-        for query_structure in logs:
-            for metric in logs[query_structure][0].keys():
-                if metric in ['num_hard_answer']:
-                    continue
-                metrics[query_structure][metric] = sum([log[metric] for log in logs[query_structure]])/len(logs[query_structure])
-            metrics[query_structure]['num_queries'] = len(logs[query_structure])
+        # for query_structure in logs:
+        #     for metric in logs[query_structure][0].keys():
+        #         if metric in ['num_hard_answer']:
+        #             continue
+        #         metrics[query_structure][metric] = sum([log[metric] for log in logs[query_structure]])/len(logs[query_structure])
+        #     metrics[query_structure]['num_queries'] = len(logs[query_structure])
 
         return metrics

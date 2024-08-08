@@ -1,0 +1,24 @@
+Q2B:
+* p: 
+    * 2p, 3p -> fused p
+* i:
+    * 2i, 3i -> fused i ?
+* u: 
+    * 2u -> 2 * 1p -> fused p
+    * up -> 2 * 2p -> fused p 
+* ip?
+
+* pi?
+
+
+BetaE
+* p
+* i
+* u
+* n
+
+
+GQE
+* p
+* i
+* u

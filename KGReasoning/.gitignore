@@ -11,3 +11,7 @@ submission/
 graph_hidet/
 result/
 dump-graph/
+Timer/
+test_BETAE_all_tasks/
+test_time_Q2B_FB15K-237/
+test_time_Q2B_NELL/
