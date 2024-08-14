@@ -28,23 +28,23 @@ import datetime
 from datetime import datetime
 import sys
 
-from utils import TimeCounter
+from TimeCounter import TimeCounter
 
 
 # Print Fx Graph in Torch Dynamo
-# from torch._dynamo import optimize
-# from torch._inductor import graph
-# class CustomGraphLowering(graph.GraphLowering):
-#     def __init__(
-#         self,
-#         gm: torch.fx.GraphModule,
-#         *args,
-#         **kwargs,
-#     ):
-#         super().__init__(gm, *args, **kwargs)
-#         print("*"*30 + "Print Fx Graph" + "*"*30)
-#         gm.graph.print_tabular()
-# graph.GraphLowering = CustomGraphLowering
+from torch._dynamo import optimize
+from torch._inductor import graph
+class CustomGraphLowering(graph.GraphLowering):
+    def __init__(
+        self,
+        gm: torch.fx.GraphModule,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(gm, *args, **kwargs)
+        print("*"*30 + "Print Fx Graph" + "*"*30)
+        gm.graph.print_tabular()
+graph.GraphLowering = CustomGraphLowering
 
 # Generate forward.svg
 # from torch.fx.passes.graph_drawer import FxGraphDrawer
@@ -55,7 +55,6 @@ from utils import TimeCounter
 #         file.write(FxGraphDrawer(gm,'f').get_dot_graph().create_svg())
 #     return gm.forward
 
-import hidet
 
 query_name_dict = {('e',('r',)): '1p', 
                     ('e', ('r', 'r')): '2p',
@@ -380,9 +379,10 @@ def main(args):
     if args.compile == "eager":
         model = model
     elif args.compile == "inductor":
-        model = torch.compile(model, backend="inductor")
-        # torch._dynamo.reset()
-        # model = torch.compile(model, backend=inspect_backend)
+        print("inductor")
+        # model = torch.compile(model, backend="inductor")
+        torch._dynamo.reset()
+        model = torch.compile(model, backend=inspect_backend)
     elif args.compile == "hidet":
         # clear_registered_rewrite_rules()
         # current_time = datetime.now().strftime("%Y%m%d-%H%M%S")

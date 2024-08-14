@@ -22,7 +22,7 @@ import os
 
 import sys
 sys.path.append("..")
-from utils.TimeCounter import TimeCounter
+from TimeCounter import TimeCounter
 
 
 def Identity(x):
