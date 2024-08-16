@@ -1,13 +1,12 @@
 backends=("inductor" "eager")
 datasets=(FB15k-237-betae FB15k-betae NELL-betae)
 query_tasks=("1p" "2p" "3p" "2i" "3i" "ip" "pi" "2u" "up" "2in" "3in" "inp" "pin" "pni" "1p.2p.3p.2i.3i.ip.pi.2in.3in.inp.pin.pni.2u.up")
-# geos=("vec", "box", "beta")
 geos=("vec" "box" "beta")
 batchsizes=(1 2 4 8 16)
 cpu=(10)
 timer_output=Timer/$(date "+%Y-%m-%d-%H:%M:%S")
-PY_EXE=/home/hongyu2021/anaconda3/envs/smore/bin/python
-MAIN_PY=/home/hongyu2021/KG-Compilation/KGReasoning/main.py
+PY_EXE=$(which python)
+MAIN_PY=./main.py
 
 mkdir $timer_output
 
