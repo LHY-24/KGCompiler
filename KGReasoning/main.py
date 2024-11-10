@@ -28,7 +28,6 @@ import datetime
 from datetime import datetime
 import sys
 
-from TimeCounter import TimeCounter
 
 
 # Print Fx Graph in Torch Dynamo
@@ -175,7 +174,6 @@ def log_metrics(mode, step, metrics):
         logging.info('%s %s at step %d: %f' % (mode, metric, step, metrics[metric]))
 
 
-# @TimeCounter.count_time()
 def evaluate(model, tp_answers, fn_answers, args, dataloader, query_name_dict, mode, step, writer, counter_printer_hint: Dict):
     '''
     Evaluate queries in dataloader
@@ -184,10 +182,7 @@ def evaluate(model, tp_answers, fn_answers, args, dataloader, query_name_dict, m
     all_metrics = defaultdict(float)
     
     print("dataset len: ", len(dataloader))
-    time_counter1 = TimeCounter.profile_time('Evalute', counter_printer_hint["timer_output_dir"])
-    time_counter1.__enter__()
     metrics = model.test_step(model, tp_answers, fn_answers, args, dataloader, query_name_dict, counter_printer_hint)
-    time_counter1.__exit__(None, None, None)
     
     num_query_structures = 0
     num_queries = 0
