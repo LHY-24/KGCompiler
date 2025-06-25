@@ -1,6 +1,6 @@
 # KGCompiler
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)  
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch 2.3+](https://img.shields.io/badge/PyTorch-2.3%2B-orange)](https://pytorch.org/)
 
@@ -27,13 +27,22 @@ Through three core components:
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start  
+
+### Models
+- [x] [CQD](https://arxiv.org/abs/2011.03459)  
+- [x] [BetaE](https://arxiv.org/abs/2010.11465)
+- [x] [Query2box](https://arxiv.org/abs/2002.05969)
+- [x] [GQE](https://arxiv.org/abs/1806.01445)
+
+### KG Data
+The KG data (FB15k, FB15k-237, NELL995) mentioned in the BetaE paper and the Query2box paper can be downloaded [here](http://snap.stanford.edu/betae/KG_data.zip).
 
 ### Installation
 ```bash
 git clone https://github.com/LHY-24/KGCompiler.git
 cd KGCompiler
-pip install -r requirements.txt
+pip install -r requirements.txt  
 ```
 
 ### Basic Usage
@@ -41,7 +50,7 @@ pip install -r requirements.txt
 from src.graph_capturer import GraphCapturer
 from src.operator_fuser import OperatorFuser
 
-# 1. Convert FOL query to computation graph
+# 1. Convert FOL query to computation graph  
 query = "∃v: Winner(TuringAward, v) ∧ Citizen(Canada, v) ∧ Graduate(v, ?)"
 graph = GraphCapturer().capture(query)
 
