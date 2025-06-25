@@ -1,10 +1,10 @@
 # KGCompiler
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)  
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)    
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch 2.3+](https://img.shields.io/badge/PyTorch-2.3%2B-orange)](https://pytorch.org/)
 
-Official resources of **"KGCompiler: Deep Learning Compilation Optimization for Knowledge Graph Complex Logical Query Answering"**. [Hongyu Lin](https://arxiv.org/search/cs?searchtype=author&query=Lin,+H), [Haoran Luo](https://arxiv.org/search/cs?searchtype=author&query=Luo,+H), [Hanghang Cao](https://arxiv.org/search/cs?searchtype=author&query=Cao,+H), [Yang Liu](https://arxiv.org/search/cs?searchtype=author&query=Liu,+Y), [Shihao Gao](https://arxiv.org/search/cs?searchtype=author&query=Gao,+S), [Kaichun Yao](https://arxiv.org/search/cs?searchtype=author&query=Yao,+K), [Libo Zhang](https://arxiv.org/search/cs?searchtype=author&query=Zhang,+L), [Mingjie Xing](https://arxiv.org/search/cs?searchtype=author&query=Xing,+M), [Yanjun Wu](https://arxiv.org/search/cs?searchtype=author&query=Wu,+Y). [[paper](https://arxiv.org/abs/2503.02172)]
+Official resources of **"KGCompiler: Deep Learning Compilation Optimization for Knowledge Graph Complex Logical Query Answering"**.
 
 ---
 
@@ -127,24 +127,3 @@ OperatorFuser.register_strategy(CustomFusion())
 2. Add pattern recognition rules in `src/pattern_recognizer.py`
 
 ---
-
-## 📧 Contact
-Contributions and feedback are greatly appreciated! Whether you've found a bug, have a question, or want to suggest improvements, please open an issue. Your input helps make BYOS better for everyone.
-
-For further questions, please contact: [hongyu2021@iscas.ac.cn](mailto:hongyu2021@iscas.ac.cn), [luohaoran@bupt.edu.cn](mailto:luohaoran@bupt.edu.cn).
-
----
-
-## 📄**Citation**
-
-> ```bibtex
-> @misc{lin2025kgcompilerdeeplearningcompilation,
->       title={KGCompiler: Deep Learning Compilation Optimization for Knowledge Graph Complex Logical Query Answering}, 
->       author={Hongyu Lin and Haoran Luo and Hanghang Cao and Yang Liu and Shihao Gao and Kaichun Yao and Libo Zhang and Mingjie Xing and Yanjun Wu},
->       year={2025},
->       eprint={2503.02172},
->       archivePrefix={arXiv},
->       primaryClass={cs.AI},
->       url={https://arxiv.org/abs/2503.02172}, 
-> }
-> ```
